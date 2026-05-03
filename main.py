@@ -9,6 +9,7 @@ from model import AuditRegForm, AuditActions
 from model import PatientRegForm, PatientActions
 from model import LogForm
 from flask_bootstrap import Bootstrap
+from flask_wtf.csrf import CSRFProtect
 import hashlib
 import pandas as pd
 import cryptography
@@ -16,6 +17,8 @@ from cryptography.fernet import Fernet
 from datetime import datetime
 from dateutil import parser
 import clipboard
+from urllib.parse import quote
+import requests
 
 from web3 import Web3
 import json
@@ -23,10 +26,49 @@ import json
 # install ganache using https://www.trufflesuite.com/ganache
 
 # connect to ganache
-ganache_url = "HTTP://127.0.0.1:7545"
+ganache_url = "http://127.0.0.1:7545"
 # pass in http url
-web3 = Web3(Web3.HTTPProvider(ganache_url))
-print("Web3 is connected = " + str(web3.isConnected()))
+from web3.providers.rpc import HTTPProvider
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+# Create a session with retry strategy for better connection handling
+session = requests.Session()
+retry_strategy = Retry(
+    total=3,
+    backoff_factor=0.3,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET", "POST"]
+)
+adapter = HTTPAdapter(max_retries=retry_strategy)
+session.mount("http://", adapter)
+session.mount("https://", adapter)
+
+# Use the session with Web3
+web3 = Web3(HTTPProvider(ganache_url, session=session))
+
+# Try to connect with retry logic
+max_retries = 3
+ganache_connected = False
+for attempt in range(max_retries):
+    try:
+        connected = web3.is_connected()
+        print(f"Web3 is connected = {connected}")
+        if connected:
+            ganache_connected = True
+            print("Successfully connected to Ganache!")
+            break
+    except Exception as e:
+        print(f"Connection attempt {attempt + 1} failed: {str(e)}")
+        if attempt < max_retries - 1:
+            import time
+            time.sleep(1)
+
+if not ganache_connected:
+    print("⚠️  WARNING: Failed to connect to Ganache at http://127.0.0.1:7545")
+    print("Please ensure Ganache is running. You can start it with:")
+    print("  ganache-cli --host 127.0.0.1 --port 7545")
+    print("  or open the Ganache GUI application")
 
 # connect to remix
 f = open('abi.json',)
@@ -43,6 +85,17 @@ app = Flask(__name__)
 app.config.from_mapping(
     SECRET_KEY=b'\xd6\x04\xbdj\xfe\xed$c\x1e@\xad\x0f\x13,@G')
 Bootstrap(app)
+csrf = CSRFProtect(app)
+
+# Helper function to check blockchain connectivity
+def check_blockchain_connection():
+    """Check if blockchain is connected, return error message if not"""
+    try:
+        if not web3.is_connected():
+            return "Blockchain is not connected. Please ensure Ganache is running on http://127.0.0.1:7545"
+        return None
+    except Exception as e:
+        return f"Error checking blockchain connection: {str(e)}. Please ensure Ganache is running."
 # Encryption of authorization data
 # Generate once use all time
 #enc_key = Fernet.generate_key()
@@ -60,70 +113,94 @@ global count_acc
 def patient_registration():
     form = PatientRegForm(request.form)
     global count_acc
-    if request.method == 'POST' and form.validate_on_submit():
-        ################## CREATE GANACHE ACCOUNT #################
-#                 #get nonce of default account
-#                 nonce = web3.eth.getTransactionCount(account_def)
-#
-#                 # create ganache accounts
-#                 account= web3.eth.account.create()
-#                 account_num = account.address
-#                 account_pk = account.privateKey
-#                 print("new account created: " +  str(account_num))
-#
-#                 #build a transaction
-#                 tx = {
-#                     'nonce': nonce,
-#                     'to': account_num,
-#                     'value': web3.toWei(1, 'ether'),
-#                     'gas': 2000000,
-#                     'gasPrice': web3.toWei('50', 'gwei'),
-#                 }
-#
-#                 #sign transaction
-#                 signed_tx = web3.eth.account.signTransaction(tx, pk_def)
-#
-#                 #send transaction
-#                 tx_hash = web3.eth.sendRawTransaction(signed_tx.rawTransaction)
-#
-#                 print("new account balance: " + str(web3.eth.getBalance(str(account_num))))
-
-        ###################### USE EXITING GANACHE ACCOUNT ###################################
-            try:
-                account_num= web3.eth.accounts[int(form.account_number.data)]
-            except:
-                print("Account number failed")
+    if request.method == 'POST':
+        if not form.validate_on_submit():
+            # Show validation errors
+            error_msg = "Please fix the errors below:\n" + "\n".join(
+                [f"{field}: {', '.join(errors)}" for field, errors in form.errors.items()]
+            )
+            print(f"Form validation failed: {error_msg}")
+            return render_template('patientreg.html', form=form, error=error_msg)
+        
+        # Check blockchain connection first
+        blockchain_error = check_blockchain_connection()
+        if blockchain_error:
+            print(blockchain_error)
+            return render_template('patientreg.html', form=form, error=blockchain_error)
+        
+        try:
+            account_num = web3.eth.accounts[form.account_number.data]
+            print(f"Patient registration: Using account {form.account_number.data} -> {account_num}")
+        except (ValueError, IndexError) as e:
+            error_msg = f"Invalid account number: {form.account_number.data}. Please use a valid account number between 0 and {len(web3.eth.accounts)-1}"
+            print(error_msg)
+            return render_template('patientreg.html', form=form, error=error_msg)
+        except Exception as e:
+            error_msg = f"Error connecting to blockchain: {str(e)}. Please ensure Ganache is running on http://127.0.0.1:7545"
+            print(error_msg)
+            return render_template('patientreg.html', form=form, error=error_msg)
+            
         ###################### RECORD ACCOUNT DETAILS TO A FILE ##############################
+        try:
             fname = hashlib.sha224(b"signin_data").hexdigest()
             f = open("data/"+fname+".csv", "a")
-            pass_hash = hashlib.sha224(bytes("loremipsum"+form.password.data,encoding='utf-8')).hexdigest()
-            encrypted_data = "patient" + ", " + str(fernet.encrypt(bytes("patient",encoding='utf-8'))) + ", " +\
-                    str(fernet.encrypt(bytes(form.name_first.data,encoding='utf-8'))) + ", " +\
-                    str(fernet.encrypt(bytes(form.name_last.data,encoding='utf-8'))) + ", " +\
-                    str(fernet.encrypt(bytes(form.email.data,encoding='utf-8')))  + ", " +\
-                    str(fernet.encrypt(bytes(form.phone.data,encoding='utf-8')))  + ", " +\
-                    str(fernet.encrypt(bytes(form.city.data,encoding='utf-8')))  + ", " +\
-                    str(fernet.encrypt(bytes(form.zip_code.data,encoding='utf-8')))  + ", " +\
-                    str(fernet.encrypt(bytes(form.insurance.data,encoding='utf-8')))  + ", " +\
-                    str(fernet.encrypt(bytes(pass_hash,encoding='utf-8'))) + "\n"
+            pass_hash = hashlib.sha224(("loremipsum"+form.password.data).encode('utf-8')).hexdigest()
+            encrypted_data = "patient" + ", " + str(fernet.encrypt("patient".encode('utf-8'))) + ", " +\
+                    str(fernet.encrypt(form.name_first.data.encode('utf-8'))) + ", " +\
+                    str(fernet.encrypt(form.name_last.data.encode('utf-8'))) + ", " +\
+                    str(fernet.encrypt(form.email.data.encode('utf-8')))  + ", " +\
+                    str(fernet.encrypt(form.phone.data.encode('utf-8')))  + ", " +\
+                    str(fernet.encrypt(form.city.data.encode('utf-8')))  + ", " +\
+                    str(fernet.encrypt(form.zip_code.data.encode('utf-8')))  + ", " +\
+                    str(fernet.encrypt(form.insurance.data.encode('utf-8')))  + ", " +\
+                    str(fernet.encrypt(pass_hash.encode('utf-8'))) + "\n"
             f.write(encrypted_data)
             f.close()
+            print(f"Patient data encrypted and saved for {form.name_first.data} {form.name_last.data}")
+        except Exception as e:
+            error_msg = f"Error saving patient data: {str(e)}"
+            print(error_msg)
+            return render_template('patientreg.html', form=form, error=error_msg)
 
-            ################## CONSTRUCTOR OF SMART CONTRACT -- DEPLOY #############################
-            try:
-                web3.eth.defaultAccount = account_num
-            except:
-                print("Account number failed")
-            #construct
-            tx_hash = contract.constructor(str(form.name_first.data),str(form.name_last.data),str(form.insurance.data),"bdate", str(form.email.data),str(form.phone.data),str(form.zip_code),str(form.city.data),"ekey").transact()
-            tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
+        ################## CONSTRUCTOR OF SMART CONTRACT -- DEPLOY #############################
+        try:
+            web3.eth.default_account = account_num
+            print(f"Setting default account to {account_num}")
+            
+            # Deploy smart contract
+            print("Deploying smart contract...")
+            tx_hash = contract.constructor(
+                str(form.name_first.data),
+                str(form.name_last.data),
+                str(form.insurance.data),
+                "bdate", 
+                str(form.email.data),
+                str(form.phone.data),
+                str(form.zip_code.data),
+                str(form.city.data),
+                "ekey"
+            ).transact()
+            print(f"Transaction hash: {tx_hash.hex()}")
+            
+            print("Waiting for transaction receipt...")
+            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            print(f"Contract deployed at: {tx_receipt.contractAddress}")
 
             username = form.name_first.data + " " + form.name_last.data
             address = account_num
             pk = "no need for demo but will be sent in actual app as email"
             result = "We have emailed you a key pair and contract address! "+"\nNormally it will be emailed using emailing API:"
-            patient_qr = "https://api.qrserver.com/v1/create-qr-code/?data="+ str(account_num) +"&size=150x150"
-            return render_template('result.html', result=result, username = username, address = address, pk=pk, tx_hash = tx_hash.hex(), tx_receipt = tx_receipt,audit_qr=patient_qr)
+            patient_qr = "https://api.qrserver.com/v1/create-qr-code/?data="+ quote(str(account_num)) +"&size=150x150"
+            print(f"Patient registration successful for {username}")
+            return render_template('result.html', result=result, username = username, address = address, pk=pk, tx_hash = tx_hash.hex(), tx_receipt = tx_receipt, audit_qr=patient_qr)
+        
+        except Exception as e:
+            error_msg = f"Error deploying smart contract: {str(e)}"
+            print(f"Smart contract deployment error: {error_msg}")
+            import traceback
+            traceback.print_exc()
+            return render_template('patientreg.html', form=form, error=error_msg)
+    
     return render_template('patientreg.html', form=form)
 
 @app.route('/auditreg', methods=['GET', 'POST'])
@@ -131,31 +208,62 @@ def audit_registration():
     form = AuditRegForm(request.form)
     global account_num
     account_num = 0
-    if request.method == 'POST' and form.validate_on_submit():
+    if request.method == 'POST':
+        if not form.validate_on_submit():
+            # Show validation errors
+            error_msg = "Please fix the errors below:\n" + "\n".join(
+                [f"{field}: {', '.join(errors)}" for field, errors in form.errors.items()]
+            )
+            print(f"Form validation failed: {error_msg}")
+            return render_template('auditreg.html', form=form, error=error_msg)
+        
+        # Check blockchain connection first
+        blockchain_error = check_blockchain_connection()
+        if blockchain_error:
+            print(blockchain_error)
+            return render_template('auditreg.html', form=form, error=blockchain_error)
+        
         try:
-            account_num= web3.eth.accounts[int(form.account_number.data)]
-        except:
-             print("Account number failed")
-        fname = hashlib.sha224(b"signin_data").hexdigest()
-        f = open("data/"+fname+".csv", "a")
-        pass_hash = hashlib.sha224(bytes("loremipsum"+form.password.data,encoding='utf-8')).hexdigest()
-        encrypted_data = "audit" + ", " +str(fernet.encrypt(bytes("audit",encoding='utf-8'))) + ", " +\
-                str(fernet.encrypt(bytes(form.name_first.data,encoding='utf-8'))) + ", " +\
-                str(fernet.encrypt(bytes(form.name_last.data,encoding='utf-8'))) + ", " +\
-                str(fernet.encrypt(bytes(form.email.data,encoding='utf-8')))  + ", " +\
-                str(fernet.encrypt(bytes(form.employee_id.data,encoding='utf-8')))  + ", " +\
-                str(fernet.encrypt(bytes("n/a",encoding='utf-8')))  + ", " +\
-                str(fernet.encrypt(bytes("00008",encoding='utf-8')))  + ", " +\
-                str(fernet.encrypt(bytes("0000000000",encoding='utf-8')))  + ", " +\
-                str(fernet.encrypt(bytes(pass_hash,encoding='utf-8'))) + "\n"
-        f.write(encrypted_data)
-        f.close()
+            account_num = web3.eth.accounts[form.account_number.data]
+            print(f"Audit registration: Using account {form.account_number.data} -> {account_num}")
+        except (ValueError, IndexError) as e:
+            error_msg = f"Invalid account number: {form.account_number.data}. Please use a valid account number between 0 and {len(web3.eth.accounts)-1}"
+            print(error_msg)
+            return render_template('auditreg.html', form=form, error=error_msg)
+        except Exception as e:
+            error_msg = f"Error connecting to blockchain: {str(e)}. Please ensure Ganache is running on http://127.0.0.1:7545"
+            print(error_msg)
+            return render_template('auditreg.html', form=form, error=error_msg)
+        
+        try:
+            fname = hashlib.sha224(b"signin_data").hexdigest()
+            f = open("data/"+fname+".csv", "a")
+            pass_hash = hashlib.sha224(("loremipsum"+form.password.data).encode('utf-8')).hexdigest()
+            encrypted_data = "audit" + ", " +str(fernet.encrypt("audit".encode('utf-8'))) + ", " +\
+                    str(fernet.encrypt(form.name_first.data.encode('utf-8'))) + ", " +\
+                    str(fernet.encrypt(form.name_last.data.encode('utf-8'))) + ", " +\
+                    str(fernet.encrypt(form.email.data.encode('utf-8')))  + ", " +\
+                    str(fernet.encrypt(form.employee_id.data.encode('utf-8')))  + ", " +\
+                    str(fernet.encrypt("n/a".encode('utf-8')))  + ", " +\
+                    str(fernet.encrypt("00008".encode('utf-8')))  + ", " +\
+                    str(fernet.encrypt("0000000000".encode('utf-8')))  + ", " +\
+                    str(fernet.encrypt(pass_hash.encode('utf-8'))) + "\n"
+            f.write(encrypted_data)
+            f.close()
+            print(f"Audit data encrypted and saved for {form.name_first.data} {form.name_last.data}")
+        except Exception as e:
+            error_msg = f"Error saving audit data: {str(e)}"
+            print(error_msg)
+            return render_template('auditreg.html', form=form, error=error_msg)
+        
         username = form.name_first.data + " " + form.name_last.data
         address = account_num
         pk = "no need for demo but will be sent in actual app as email"
         result = "We have emailed you a key pair! "+"\nNormally it will be emailed using emailing API:"
-        audit_qr = "https://api.qrserver.com/v1/create-qr-code/?data="+ str(account_num) +"&size=150x150"
+        audit_qr = "https://api.qrserver.com/v1/create-qr-code/?data="+ quote(str(account_num)) +"&size=150x150"
+        print(f"Audit registration successful for {username}")
         return render_template('result.html', result=result, username = username, address = address, pk=pk, tx_hash =0, tx_receipt=0, audit_qr=audit_qr)
+    
     return render_template('auditreg.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -165,15 +273,29 @@ def login():
     form = LogForm(request.form)
     form2 = PatientActions(request.form)
     form3 = AuditActions(request.form)
-    address = form.user_name.data
-    encrypt_address = fernet.encrypt(bytes(address,encoding='utf-8'))
-    hashed_pass = hashlib.sha224(bytes("loremipsum"+form.password.data,encoding='utf-8')).hexdigest()
-    hashed_ecrypt_pass = fernet.encrypt(bytes(hashed_pass,encoding='utf-8'))
     if request.method == 'POST' and form.validate_on_submit():
-        df=pd.read_csv("data/"+fname+".csv")
-        row = df.loc[df['address'] == str(encrypt_address)]
-        if(row[password] == str(hashed_pass)):
-#         if form.password.data != '':
+        address = form.user_name.data
+        hashed_pass = hashlib.sha224(("loremipsum"+form.password.data).encode('utf-8')).hexdigest()
+        
+        valid_login = False
+        try:
+            df = pd.read_csv("data/"+fname+".csv", header=None)
+            for index, row in df.iterrows():
+                # The last column is the encrypted hashed password
+                encrypted_pass = str(row.iloc[-1]).strip()
+                try:
+                    if encrypted_pass.startswith("b'") and encrypted_pass.endswith("'"):
+                        encrypted_pass = encrypted_pass[2:-1]
+                    decrypted_pass = fernet.decrypt(encrypted_pass.encode('utf-8')).decode('utf-8')
+                    if decrypted_pass == hashed_pass:
+                        valid_login = True
+                        break
+                except Exception:
+                    continue
+        except Exception:
+            pass
+
+        if not valid_login:
             error = 'Invalid Credentials. Please try again.'
         else:
             if str(form.contract_address.data) != "0":
@@ -199,13 +321,13 @@ def patientdash():
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
-            web3.eth.defaultAccount = account_address
+            web3.eth.default_account = account_address
             date_obj = parser.parse(form.start_visit.data)
             date_epoch = date_obj.timestamp()
             tx_hash  = contract.functions.start_visit(int(date_epoch)).transact()
-            tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-            event_logs = contract.events.event_start_visit.getLogs()
-            qr_code = "https://api.qrserver.com/v1/create-qr-code/?data="+event_logs[0]['args']['record_unique_id']+"&size=150x150"
+            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            event_logs = contract.events.event_start_visit.get_logs()
+            qr_code = "https://api.qrserver.com/v1/create-qr-code/?data="+quote(str(event_logs[0]['args']['record_unique_id']))+"&size=150x150"
 #             changes = filter.get_new_entries()
             print("--------------------changes-------------")
             print(event_logs)
@@ -216,8 +338,8 @@ def patientdash():
             ###################### ENCRYPT & RECORD ACCOUNT DETAILS TO A FILE ##############################
             fname = hashlib.sha224(b"uniqueid_data").hexdigest()
             f = open("data/"+fname+".csv", "a")
-            encrypted_data = str(fernet.encrypt(bytes(contract_address,encoding='utf-8')))\
-            +","+str(fernet.encrypt(bytes(event_logs[0]['args']['record_unique_id'],encoding='utf-8')))+"\n"
+            encrypted_data = str(fernet.encrypt(contract_address.encode('utf-8')))\
+            +","+str(fernet.encrypt(str(event_logs[0]['args']['record_unique_id']).encode('utf-8')))+"\n"
             f.write(encrypted_data)
             f.close()
             ###################### END RECORD ACCOUNT DETAILS TO A FILE ########################
@@ -232,10 +354,10 @@ def patientdash():
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
-            web3.eth.defaultAccount = account_address
+            web3.eth.default_account = account_address
             tx_hash  = contract.functions.addDoctors(dr_id).transact()
-            tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-            event_logs = contract.events.event_add_doctor.getLogs()
+            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            event_logs = contract.events.event_add_doctor.get_logs()
 #             changes = filter.get_new_entries()
             print("--------------------changes-------------")
             print(event_logs[0]['args']['return_msg'])
@@ -253,10 +375,10 @@ def patientdash():
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
-            web3.eth.defaultAccount = account_address
+            web3.eth.default_account = account_address
             tx_hash  = contract.functions.removeDoctors(dr_id).transact()
-            tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-            event_logs = contract.events.event_remove_doctor.getLogs()
+            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            event_logs = contract.events.event_remove_doctor.get_logs()
 #             changes = filter.get_new_entries()
             print("--------------------changes-------------")
             print(event_logs)
@@ -274,10 +396,10 @@ def patientdash():
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
-            web3.eth.defaultAccount = account_address
+            web3.eth.default_account = account_address
             tx_hash  = contract.functions.addAudit(audit_id).transact()
-            tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-            event_logs = contract.events.event_add_audit.getLogs()
+            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            event_logs = contract.events.event_add_audit.get_logs()
 
             print("--------------------changes-------------")
             print(event_logs)
@@ -295,10 +417,10 @@ def patientdash():
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
-            web3.eth.defaultAccount = account_address
+            web3.eth.default_account = account_address
             tx_hash  = contract.functions.removeAudit(audit_id).transact()
-            tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-            event_logs = contract.events.event_remove_audit.getLogs()
+            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            event_logs = contract.events.event_remove_audit.get_logs()
 
             print("--------------------changes-------------")
             print(event_logs)
@@ -312,17 +434,17 @@ def patientdash():
             isCard  = True
             unique_id = form.print_record.data
             unique_id = unique_id.lower()
-            unique_id = Web3.toChecksumAddress(unique_id)
+            unique_id = Web3.to_checksum_address(unique_id)
             result = "Patient printed their medical records."
 
             ################## Solidity Transaction ###################
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
-            web3.eth.defaultAccount = account_address
+            web3.eth.default_account = account_address
             tx_hash  = contract.functions.print_record(unique_id).transact()
-            tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-            event_logs = contract.events.event_patient_print.getLogs()
+            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            event_logs = contract.events.event_patient_print.get_logs()
             print("--------------------changes-------------")
             print(event_logs)
             print("--------------------end changes-------------")
@@ -338,17 +460,17 @@ def patientdash():
             isCard  = True
             unique_id = form.delete_record.data
             unique_id = unique_id.lower()
-            unique_id = Web3.toChecksumAddress(unique_id)
+            unique_id = Web3.to_checksum_address(unique_id)
             result = "Patient deleted their medical record."
 
             ################## Solidity Transaction ###################
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
-            web3.eth.defaultAccount = account_address
+            web3.eth.default_account = account_address
             tx_hash  = contract.functions.delete_record(unique_id).transact()
-            tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-            event_logs = contract.events.event_patient_delete.getLogs()
+            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            event_logs = contract.events.event_patient_delete.get_logs()
             print("--------------------changes-------------")
             print(event_logs)
             print("--------------------end changes-------------")
@@ -365,6 +487,10 @@ def auditdash():
     contract_address = request.args.get("contract")
     form = AuditActions(request.form)
     if request.method == 'POST':
+        print("====== AUDIT DASH POST ======")
+        print("request.form:", request.form)
+        print("action10:", request.form.get('action10'))
+        print("form.contract_address.data:", form.contract_address.data)
         if request.form.get('action10') == 'VALUE10':
             contract_address  = form.contract_address.data
             return redirect('audit?'+"address=" + str(account_address) + "&contract=" + str(form.contract_address.data) )
@@ -373,17 +499,17 @@ def auditdash():
             isCard  = True
             unique_id = form.print_record.data
             unique_id = unique_id.lower()
-            unique_id = Web3.toChecksumAddress(unique_id)
+            unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit printed patient medical records."
 
             ################## Solidity Transaction ###################
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
-            web3.eth.defaultAccount = account_address
+            web3.eth.default_account = account_address
             tx_hash  = contract.functions.doctor_print_record(unique_id).transact()
-            tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-            event_logs = contract.events.event_doctor_print.getLogs()
+            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            event_logs = contract.events.event_doctor_print.get_logs()
             print("--------------------changes-------------")
             print(event_logs)
             print("--------------------end changes-------------")
@@ -399,17 +525,17 @@ def auditdash():
             isCard  = True
             unique_id = form.update_record_id.data
             unique_id = unique_id.lower()
-            unique_id = Web3.toChecksumAddress(unique_id)
+            unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit updated patient medical records."
             new_record = form.update_record_rec.data
             ################## Solidity Transaction ###################
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
-            web3.eth.defaultAccount = account_address
+            web3.eth.default_account = account_address
             tx_hash  = contract.functions.doctor_update_record(unique_id,new_record).transact()
-            tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-            event_logs = contract.events.event_doctor_update.getLogs()
+            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            event_logs = contract.events.event_doctor_update.get_logs()
             print("--------------------changes-------------")
             print(event_logs)
             print("--------------------end changes-------------")
@@ -423,17 +549,17 @@ def auditdash():
             isCard  = True
             unique_id = form.query.data
             unique_id = unique_id.lower()
-            unique_id = Web3.toChecksumAddress(unique_id)
+            unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit queried one of the patient medical records."
 
             ################## Solidity Transaction ###################
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
-            web3.eth.defaultAccount = account_address
+            web3.eth.default_account = account_address
             tx_hash  = contract.functions.doctor_query_record(unique_id).transact()
-            tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-            event_logs = contract.events.event_doctor_query.getLogs()
+            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            event_logs = contract.events.event_doctor_query.get_logs()
             print("--------------------changes-------------")
             print(event_logs)
             print("--------------------end changes-------------")
@@ -461,17 +587,17 @@ def auditdash():
             isCard  = True
             unique_id = form.copy_record.data
             unique_id = unique_id.lower()
-            unique_id = Web3.toChecksumAddress(unique_id)
+            unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit copied patient medical records."
 
             ################## Solidity Transaction ###################
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
-            web3.eth.defaultAccount = account_address
+            web3.eth.default_account = account_address
             tx_hash  = contract.functions.doctor_copy_record(unique_id).transact()
-            tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-            event_logs = contract.events.event_doctor_copy.getLogs()
+            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            event_logs = contract.events.event_doctor_copy.get_logs()
             print("--------------------changes-------------")
             print(event_logs)
             print("--------------------end changes-------------")
@@ -486,17 +612,17 @@ def auditdash():
             isCard  = True
             unique_id = form.delete_record.data
             unique_id = unique_id.lower()
-            unique_id = Web3.toChecksumAddress(unique_id)
+            unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit deleted patient medical records."
 
             ################## Solidity Transaction ###################
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
-            web3.eth.defaultAccount = account_address
+            web3.eth.default_account = account_address
             tx_hash  = contract.functions.doctor_delete_record(unique_id).transact()
-            tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-            event_logs = contract.events.event_doctor_delete.getLogs()
+            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            event_logs = contract.events.event_doctor_delete.get_logs()
             print("--------------------changes-------------")
             print(event_logs)
             print("--------------------end changes-------------")
@@ -506,7 +632,7 @@ def auditdash():
 
         else:
             pass # unknown
-    return render_template('audit.html', form=form, username=account_address)
+    return render_template('audit.html', form=form, username=account_address, contract_address=contract_address)
 
 
 if __name__ == '__main__':

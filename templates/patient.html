@@ -1,177 +1,407 @@
-{% extends "bootstrap/base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
-{% block content %}
-<!--navbar-->
-<nav class="navbar navbar-dark bg-primary">
-    <a class="navbar-brand" style="color:white;" href="/">CryptoEHR</a>
-    <a class="navbar-brand" style="color:white; vertical-align: middle; float: right; font-size: 15px;" href="/auditreg">Log Out</a>
-    <a class="navbar-brand" style=" color:white; vertical-align: middle; float: right; font-size: 15px;" href="/patient">Logged In</a>
-</nav>
-<!--navbar end-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EHR Chain — Patient Dashboard</title>
+  <meta name="description" content="Manage your blockchain health records and doctor access permissions.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: { DEFAULT: '#0A0F1E', 800: '#0D1426', 700: '#111827' },
+            cyan: { DEFAULT: '#00D4FF', dark: '#00A8CC' },
+            emerald: { DEFAULT: '#00E5A0', dark: '#00B87A' },
+            coral: { DEFAULT: '#FF4D6D', dark: '#CC3A55' },
+            amber: { DEFAULT: '#FFB830', dark: '#CC9020' },
+          },
+          fontFamily: {
+            sans:    ['Inter', 'sans-serif'],
+            heading: ['Space Grotesk', 'sans-serif'],
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4,0,0.6,1) infinite',
+            'slide-up':   'slideUp 0.5s ease forwards',
+            'fade-in':    'fadeIn 0.4s ease forwards',
+          },
+          keyframes: {
+            slideUp: { '0%': { opacity: 0, transform: 'translateY(16px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+            fadeIn:  { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0A0F1E; }
+    .glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
+    .glass-hover:hover { background: rgba(255,255,255,0.06); }
+    .input-field {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 11px 16px; color: white; outline: none; transition: all 0.2s;
+      font-family: 'Inter', sans-serif; font-size: 0.9rem;
+    }
+    .input-field::placeholder { color: rgba(255,255,255,0.25); }
+    .input-field:focus { border-color: #00D4FF; box-shadow: 0 0 0 1px rgba(0,212,255,0.25); }
+    /* Hide all default WTForms labels and wrappers since we are manually rendering */
+    .wtf-hidden label, .wtf-hidden .help-block { display: none !important; }
+    .wtf-hidden input { 
+      background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important;
+      border-radius: 12px !important; padding: 11px 16px !important; color: white !important;
+      width: 100% !important; outline: none !important; transition: all 0.2s !important;
+      font-family: 'Inter', sans-serif !important;
+    }
+    .wtf-hidden input::placeholder { color: rgba(255,255,255,0.25) !important; }
+    .wtf-hidden input:focus { border-color: #00D4FF !important; box-shadow: 0 0 0 1px rgba(0,212,255,0.25) !important; }
+    .card-accent-cyan { border-left: 3px solid #00D4FF; }
+    .card-accent-emerald { border-left: 3px solid #00E5A0; }
+    .card-accent-coral { border-left: 3px solid #FF4D6D; }
+    .card-accent-amber { border-left: 3px solid #FFB830; }
+    ::-webkit-scrollbar { width: 6px; } 
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    @media (max-width: 1024px) { #sidebar { display: none; } }
+  </style>
+</head>
+<body class="bg-navy text-white font-sans min-h-screen antialiased flex">
 
-<div class="row">
-    <!--    forms-->
-    <div class="container col-md-6" style="margin-left: 10%">
-        <h3>Patient actions</h3>
-        <ul><li class="list-group-item">Account Address: {{username}}</li>
-            <li class="list-group-item">Contract Address:  {{contract_address}} </li>
-        </ul>
-
-        <hr>
-        <form action="" method="post" class="form" role="form">
-            {{ form.csrf_token() }}
-            <div class="row">
-                <div class="form-group col-md-8">
-                    {{ wtf.form_field(form.start_visit, class='form-control',
-                    placeholder='MM/DD/YYYY hh:mm') }}
-                    <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content;" value="VALUE1" name="action1">Start Visit</button>
-
-                </div>
-            </div>
-
-        </form>
-        <hr>
-        <form action="" method="post" class="form" role="form">
-            {{ form.csrf_token() }}
-            <div class="row">
-                <div class="form-group col-md-8">
-                    {{ wtf.form_field(form.add_doctors, class='form-control',
-                    placeholder='Doctor Id') }}
-                    <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content;" value="VALUE2" name="action2">Add Doctor</button>
-
-                </div>
-            </div>
-
-        </form>
-        <hr>
-        <form action="" method="post" class="form" role="form">
-            {{ form.csrf_token() }}
-            <div class="row">
-                <div class="form-group col-md-8">
-                    {{ wtf.form_field(form.remove_doctors, class='form-control',
-                    placeholder='Doctor Id') }}
-                    <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content;" value="VALUE3" name="action3">Remove Doctor</button>
-
-                </div>
-            </div>
-
-        </form>
-        <hr>
-        <form action="" method="post" class="form" role="form">
-            {{ form.csrf_token() }}
-            <div class="row">
-                <div class="form-group col-md-8">
-                    {{ wtf.form_field(form.add_audits, class='form-control',
-                    placeholder='Audit Id') }}
-                    <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content;" value="VALUE4" name="action4">Add Audit</button>
-
-                </div>
-            </div>
-
-        </form>
-        <hr>
-        <form action="" method="post" class="form" role="form">
-            {{ form.csrf_token() }}
-            <div class="row">
-                <div class="form-group col-md-8">
-                    {{ wtf.form_field(form.remove_audits, class='form-control',
-                    placeholder='Audit Id') }}
-                    <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content;" value="VALUE5" name="action5">Remove Audit</button>
-
-                </div>
-            </div>
-
-        </form>
-
-        <hr>
-        <form action="" method="post" class="form" role="form">
-            {{ form.csrf_token() }}
-            <div class="row">
-                <div class="form-group col-md-8">
-                    {{ wtf.form_field(form.print_record, class='form-control',
-                    placeholder='Record Id') }}
-                    <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content;" value="VALUE6" name="action6">Print Medical Record</button>
-
-                </div>
-            </div>
-
-        </form>
-        <hr>
-        <form action="" method="post" class="form" role="form">
-            {{ form.csrf_token() }}
-            <div class="row">
-                <div class="form-group col-md-8">
-                    {{ wtf.form_field(form.delete_record, class='form-control',
-                    placeholder='Record Id') }}
-                    <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content;" value="VALUE7" name="action7">Delete Medical Record</button>
-
-                </div>
-            </div>
-
-        </form>
-
-        <hr>
-        <p>Distributed EHR System - All humans working for you.</p>
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="hidden lg:flex flex-col w-64 shrink-0 border-r border-white/5 sticky top-0 h-screen overflow-y-auto" style="background:#080D1A">
+    <!-- Logo -->
+    <div class="px-6 py-5 border-b border-white/5">
+      <a href="/" class="flex items-center gap-2 font-heading font-bold text-lg">
+        <i class="fa-solid fa-cube" style="color:#00D4FF"></i>
+        <span style="background: linear-gradient(135deg, #00D4FF, #00E5A0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">EHR Chain</span>
+      </a>
     </div>
-    <!--    forms end-->
 
-    <!--    side -->
-    <div class="container col-md-4">
+    <!-- Patient identity -->
+    <div class="px-6 py-6 border-b border-white/5">
+      <div class="w-12 h-12 rounded-2xl flex items-center justify-center font-heading font-bold text-navy mb-3" style="background:#00D4FF; font-size:1.2rem">P</div>
+      <p class="font-semibold text-white text-sm mb-1">Patient</p>
+      <p class="text-white/40 text-xs font-mono break-all">{{ username[:20] if username else '—' }}…</p>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 px-3 py-4 space-y-1">
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all glass-hover" style="color:#00D4FF; background:rgba(0,212,255,0.08)">
+        <i class="fa-solid fa-house w-4"></i> Dashboard
+      </a>
+      <a href="#section-visit" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/60 font-medium transition-all glass-hover hover:text-white">
+        <i class="fa-solid fa-calendar-plus w-4"></i> New Visit
+      </a>
+      <a href="#section-doctors" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/60 font-medium transition-all glass-hover hover:text-white">
+        <i class="fa-solid fa-user-doctor w-4"></i> Manage Doctors
+      </a>
+      <a href="#section-records" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/60 font-medium transition-all glass-hover hover:text-white">
+        <i class="fa-solid fa-file-medical w-4"></i> My Records
+      </a>
+    </nav>
+
+    <!-- Logout -->
+    <div class="px-3 pb-6">
+      <a href="/" aria-label="Log Out" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/40 font-medium transition-all hover:text-white hover:bg-white/5">
+        <i class="fa-solid fa-right-from-bracket w-4"></i> Log Out
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+
+    <!-- Top bar -->
+    <header class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+      <div>
+        <h2 class="font-heading font-bold text-xl">Patient Dashboard</h2>
+        <p class="text-white/40 text-xs mt-0.5 font-mono">{{ username }}</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="hidden sm:flex items-center gap-2 text-xs" style="color:#00E5A0">
+          <span class="w-2 h-2 rounded-full animate-pulse-slow" style="background:#00E5A0"></span>
+          Contract: {{ contract_address[:12] if contract_address else '—' }}…
+        </span>
+        <a href="/" aria-label="Log Out" class="px-3 py-1.5 text-sm rounded-xl glass glass-hover transition-all text-white/60 hover:text-white">
+          <i class="fa-solid fa-right-from-bracket mr-1"></i> Log Out
+        </a>
+      </div>
+    </header>
+
+    <!-- Dashboard Body -->
+    <div class="flex flex-1 overflow-y-auto">
+
+      <!-- Forms Column -->
+      <div class="flex-1 p-6 space-y-6 max-w-2xl">
+
+        <!-- ── SECTION A: Start Visit ── -->
+        <section id="section-visit" class="glass rounded-2xl p-6 card-accent-emerald animate-slide-up">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(0,229,160,0.12)">
+                <i class="fa-solid fa-calendar-plus" style="color:#00E5A0"></i>
+              </div>
+              <div>
+                <h3 class="font-heading font-semibold text-white">Start New Visit</h3>
+                <p class="text-white/40 text-xs">Creates a new on-chain medical record</p>
+              </div>
+            </div>
+            <span class="inline-flex items-center gap-1.5 text-xs font-medium" style="color:#00E5A0">
+              <span class="w-1.5 h-1.5 rounded-full animate-pulse-slow" style="background:#00E5A0"></span>
+              On-chain
+            </span>
+          </div>
+          <!-- Form — Jinja2 preserved -->
+          <form action="" method="post" role="form">
+            {{ form.csrf_token() }}
+            <div class="space-y-3">
+              <div>
+                <label for="start_visit" class="block text-sm text-white/50 mb-2">Appointment Date & Time</label>
+                {{ form.start_visit(id="start_visit", class="input-field", placeholder="MM/DD/YYYY hh:mm", **{"aria-label": "Appointment Date and Time"}) }}
+              </div>
+              <button type="submit" name="action1" value="VALUE1" aria-label="Start Visit" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-heading font-semibold text-navy text-sm transition-all duration-200 hover:opacity-90 active:scale-95" style="background:#00E5A0">
+                <i class="fa-solid fa-play"></i> Start Visit
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ── SECTION B: Add Doctor ── -->
+        <section id="section-doctors" class="glass rounded-2xl p-6 card-accent-cyan animate-slide-up" style="animation-delay:0.05s">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(0,212,255,0.12)">
+                <i class="fa-solid fa-user-plus" style="color:#00D4FF"></i>
+              </div>
+              <div>
+                <h3 class="font-heading font-semibold text-white">Grant Doctor Access</h3>
+                <p class="text-white/40 text-xs">Updates smart contract permissions</p>
+              </div>
+            </div>
+            <span class="inline-flex items-center gap-1.5 text-xs font-medium" style="color:#00D4FF">
+              <span class="w-1.5 h-1.5 rounded-full animate-pulse-slow" style="background:#00D4FF"></span>
+              On-chain
+            </span>
+          </div>
+          <form action="" method="post" role="form">
+            {{ form.csrf_token() }}
+            <div class="space-y-3">
+              <div>
+                <label for="add_doctors" class="block text-sm text-white/50 mb-2">Doctor's Blockchain Address</label>
+                {{ form.add_doctors(id="add_doctors", class="input-field", placeholder="0x... Doctor's address", **{"aria-label": "Doctor Address to Add"}) }}
+              </div>
+              <button type="submit" name="action2" value="VALUE2" aria-label="Add Doctor" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-heading font-semibold text-navy text-sm transition-all duration-200 hover:opacity-90 active:scale-95" style="background:#00D4FF">
+                <i class="fa-solid fa-user-plus"></i> Grant Access
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ── SECTION C: Remove Doctor ── -->
+        <section class="glass rounded-2xl p-6 card-accent-coral animate-slide-up" style="animation-delay:0.1s">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(255,77,109,0.12)">
+                <i class="fa-solid fa-user-minus" style="color:#FF4D6D"></i>
+              </div>
+              <div>
+                <h3 class="font-heading font-semibold text-white">Revoke Doctor Access</h3>
+                <p class="text-white/40 text-xs">Removes doctor from authorized list</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2 p-3 rounded-xl mb-4 text-xs" style="background:rgba(255,77,109,0.07); border:1px solid rgba(255,77,109,0.2); color:rgba(255,77,109,0.9)">
+            <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0"></i>
+            This will permanently block the doctor from reading your records.
+          </div>
+          <form action="" method="post" role="form">
+            {{ form.csrf_token() }}
+            <div class="space-y-3">
+              <div>
+                <label for="remove_doctors" class="block text-sm text-white/50 mb-2">Doctor's Blockchain Address</label>
+                {{ form.remove_doctors(id="remove_doctors", class="input-field", placeholder="0x... Doctor's address to revoke", **{"aria-label": "Doctor Address to Remove"}) }}
+              </div>
+              <button type="submit" name="action3" value="VALUE3" aria-label="Remove Doctor" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-heading font-semibold text-sm transition-all duration-200 active:scale-95" style="background:rgba(255,77,109,0.12); border:1px solid rgba(255,77,109,0.3); color:#FF4D6D">
+                <i class="fa-solid fa-user-minus"></i> Revoke Access
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ── SECTION: Add / Remove Audit ── -->
+        <section class="glass rounded-2xl p-6 card-accent-amber animate-slide-up" style="animation-delay:0.15s">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(255,184,48,0.12)">
+              <i class="fa-solid fa-magnifying-glass-chart" style="color:#FFB830"></i>
+            </div>
+            <div>
+              <h3 class="font-heading font-semibold text-white">Manage Auditors</h3>
+              <p class="text-white/40 text-xs">Add or remove third-party auditors</p>
+            </div>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <form action="" method="post" role="form">
+              {{ form.csrf_token() }}
+              <div class="space-y-3">
+                <label for="add_audits" class="block text-sm text-white/50">Add Auditor</label>
+                {{ form.add_audits(id="add_audits", class="input-field", placeholder="Audit ID", **{"aria-label": "Audit ID to Add"}) }}
+                <button type="submit" name="action4" value="VALUE4" aria-label="Add Audit" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-heading font-semibold text-sm text-navy transition-all duration-200 hover:opacity-90 active:scale-95" style="background:#FFB830">
+                  <i class="fa-solid fa-plus"></i> Add Audit
+                </button>
+              </div>
+            </form>
+            <form action="" method="post" role="form">
+              {{ form.csrf_token() }}
+              <div class="space-y-3">
+                <label for="remove_audits" class="block text-sm text-white/50">Remove Auditor</label>
+                {{ form.remove_audits(id="remove_audits", class="input-field", placeholder="Audit ID", **{"aria-label": "Audit ID to Remove"}) }}
+                <button type="submit" name="action5" value="VALUE5" aria-label="Remove Audit" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-heading font-semibold text-sm transition-all duration-200 active:scale-95" style="background:rgba(255,184,48,0.1); border:1px solid rgba(255,184,48,0.3); color:#FFB830">
+                  <i class="fa-solid fa-minus"></i> Remove Audit
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ── SECTION: Records ── -->
+        <section id="section-records" class="glass rounded-2xl p-6 animate-slide-up" style="animation-delay:0.2s">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(148,163,184,0.1)">
+              <i class="fa-solid fa-file-medical text-white/60"></i>
+            </div>
+            <div>
+              <h3 class="font-heading font-semibold text-white">My Medical Records</h3>
+              <p class="text-white/40 text-xs">Print or delete a specific record</p>
+            </div>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <form action="" method="post" role="form">
+              {{ form.csrf_token() }}
+              <div class="space-y-3">
+                <label for="print_record" class="block text-sm text-white/50">Print Record</label>
+                {{ form.print_record(id="print_record", class="input-field", placeholder="Record ID", **{"aria-label": "Record ID to Print"}) }}
+                <button type="submit" name="action6" value="VALUE6" aria-label="Print Medical Record" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-heading font-semibold text-sm text-navy transition-all duration-200 hover:opacity-90 active:scale-95" style="background:rgba(255,255,255,0.85); color:#0A0F1E">
+                  <i class="fa-solid fa-print"></i> Print Record
+                </button>
+              </div>
+            </form>
+            <form action="" method="post" role="form">
+              {{ form.csrf_token() }}
+              <div class="space-y-3">
+                <label for="delete_record" class="block text-sm text-white/50">Delete Record</label>
+                {{ form.delete_record(id="delete_record", class="input-field", placeholder="Record ID", **{"aria-label": "Record ID to Delete"}) }}
+                <button type="submit" name="action7" value="VALUE7" aria-label="Delete Medical Record" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-heading font-semibold text-sm transition-all duration-200 active:scale-95" style="background:rgba(255,77,109,0.1); border:1px solid rgba(255,77,109,0.3); color:#FF4D6D">
+                  <i class="fa-solid fa-trash"></i> Delete Record
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Results / Side Panel — Jinja2 preserved -->
+      <div class="w-96 shrink-0 p-6">
         {% if isCard == True %}
         {% block content1 %}
-        <div class="card" style="width: 48rem; position: fixed; top: 30%;">
-            <div class="card-body">
-                <h5 class="card-title">Action: {{result}}</h5>
-                <p class="card-text"><b>Details:</b>
-                </p>
+        <div class="glass rounded-2xl p-5 sticky top-6 animate-fade-in">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(0,229,160,0.12)">
+              <i class="fa-solid fa-bolt text-sm" style="color:#00E5A0"></i>
             </div>
-            <ul class="list-group list-group-flush">
-                {% if isStart == True %}
-                <li class="list-group-item"><b>Appointment Date:</b> {{date}}</li>
-                {% endif %}
-                <li class="list-group-item"><b>Tx Hash:</b> {{tx_hash[:40]}}...</li>
-                {% if event_logs[0]['args']['record_unique_id'] %}
-                <li class="list-group-item"><b>Unique Record ID:</b>  {{event_logs[0]['args']['record_unique_id']}} </li>
-                <li class="list-group-item"> Show this to your doctor to audit this record:<br>
-                    <img src={{qr_code}} alt="" title="" />
-                </li>
-
-                {% endif %}
-                {% if event_logs[0]['args']['record_msg'] %}
-                <li class="list-group-item"><b>Record Message:</b>  {{event_logs[0]['args']['record_msg']}} </li>
-                <li class="list-group-item"><b>Record Status:</b> {{event_logs[0]['args']['record_status']}}
-                    <br>(0-Created, 1-Deleted, 2-Changed, 3-Queried, 4-Printed, 5-Copied)</li>
-
-                {% endif %}
-                {% if event_logs[0]['args']['return_msg'] %}
-                <li class="list-group-item"><b>Event Log:</b>  {{event_logs[0]['args']['return_msg']}} </li>
-                <li class="list-group-item"><b>Address:</b>  {{event_logs[0]['args']['doctor_address']}} </li>
-                <li class="list-group-item"><b>Epoch time:</b>  {{event_logs[0]['args']['record_time']}} </li>
-                {% endif %}
-            </ul>
-
-            <div class="card-body">
-                {% if record_details %}
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><b>Medical Record Details:</b> </li>
-                    <li class="list-group-item">{{record_details}}</li>
-                </ul>
-                {% endif %}
+            <div>
+              <p class="text-xs text-white/40">Transaction Result</p>
+              <p class="font-heading font-semibold text-sm text-white">{{ result }}</p>
             </div>
+          </div>
+          <div class="space-y-3">
+            {% if isStart == True %}
+            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
+              <p class="text-xs text-white/40 mb-1">Appointment Date</p>
+              <p class="text-sm text-white font-mono">{{ date }}</p>
+            </div>
+            {% endif %}
+            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
+              <p class="text-xs text-white/40 mb-1">Transaction Hash</p>
+              <p class="text-xs text-white font-mono break-all">{{ tx_hash[:40] }}...</p>
+            </div>
+            {% if event_logs[0]['args']['record_unique_id'] %}
+            <div class="p-3 rounded-xl" style="background:rgba(0,212,255,0.06); border:1px solid rgba(0,212,255,0.2)">
+              <p class="text-xs mb-1" style="color:rgba(0,212,255,0.7)">Unique Record ID</p>
+              <p class="text-xs text-white font-mono break-all" id="record-id-text">{{ event_logs[0]['args']['record_unique_id'] }}</p>
+              <button onclick="copyText(document.getElementById('record-id-text').textContent.trim())" class="mt-2 text-xs px-3 py-1 rounded-lg transition-all hover:opacity-80" style="background:rgba(0,212,255,0.1); color:#00D4FF; border:1px solid rgba(0,212,255,0.2)">
+                <i class="fa-solid fa-copy mr-1"></i>Copy ID
+              </button>
+            </div>
+            <div class="p-3 rounded-xl text-center" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
+              <p class="text-xs text-white/40 mb-2">Show to your doctor:</p>
+              <img src={{qr_code}} alt="QR Code for Record" class="mx-auto rounded-lg" style="max-width:140px" />
+            </div>
+            {% endif %}
+            {% if event_logs[0]['args']['record_msg'] %}
+            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
+              <p class="text-xs text-white/40 mb-1">Record Message</p>
+              <p class="text-xs text-white">{{ event_logs[0]['args']['record_msg'] }}</p>
+            </div>
+            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
+              <p class="text-xs text-white/40 mb-1">Status</p>
+              <p class="text-xs text-white">{{ event_logs[0]['args']['record_status'] }} <span class="text-white/30">(0=Created, 1=Deleted, 2=Changed, 3=Queried, 4=Printed, 5=Copied)</span></p>
+            </div>
+            {% endif %}
+            {% if event_logs[0]['args']['return_msg'] %}
+            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
+              <p class="text-xs text-white/40 mb-1">Event Log</p>
+              <p class="text-xs text-white">{{ event_logs[0]['args']['return_msg'] }}</p>
+              <p class="text-xs text-white/50 font-mono mt-1 break-all">{{ event_logs[0]['args']['doctor_address'] }}</p>
+              <p class="text-xs text-white/30 mt-1">Epoch: {{ event_logs[0]['args']['record_time'] }}</p>
+            </div>
+            {% endif %}
+            {% if record_details %}
+            <div class="p-3 rounded-xl" style="background:rgba(0,229,160,0.05); border:1px solid rgba(0,229,160,0.2)">
+              <p class="text-xs mb-1" style="color:#00E5A0">Medical Record Details</p>
+              <p class="text-sm text-white">{{ record_details }}</p>
+            </div>
+            {% endif %}
+          </div>
         </div>
         {% endblock %}
         {% endif %}
+      </div>
+
     </div>
-    <!--    side end -->
-</div>
-<!--footer-->
-<footer class="bg-light text-center text-lg-start" style="position: float; bottom: 0; right:0; left:0;">
-    <!-- Copyright -->
-    <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);  padding: 20px;">
-        © 2021 Copyright:
-        <a class="text-dark" href="https://github.com/cumbul">Kivilcim(Kylie) Cumbul</a>
-    </div>
-    <!-- Copyright -->
-</footer>
-<!--footer end -->
-{% endblock %}
+  </div>
+
+  <!-- Copy toast -->
+  <div id="copy-toast" class="fixed bottom-6 right-6 text-navy text-sm font-semibold px-4 py-2 rounded-xl opacity-0 transition-opacity duration-300 pointer-events-none" style="background:#00E5A0">
+    <i class="fa-solid fa-check mr-1"></i> Copied!
+  </div>
+
+  <script>
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const el = document.getElementById('copy-toast');
+        if (el) { el.classList.remove('opacity-0'); setTimeout(() => el.classList.add('opacity-0'), 2000); }
+      });
+    }
+    // Loading spinner: use setTimeout so form submits FIRST, then button visually updates
+    // Disabling the button before submission strips its name/value from POST data!
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', function(e) {
+        const btn = this.querySelector('button[type="submit"]:not([data-no-spinner])');
+        if (btn) {
+          // Store original content, change appearance AFTER a tick (not before)
+          const orig = btn.innerHTML;
+          setTimeout(() => {
+            btn.style.opacity = '0.7';
+            btn.style.cursor = 'not-allowed';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing...';
+          }, 10);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

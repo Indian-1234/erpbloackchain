@@ -1,24 +1,147 @@
-{% extends "bootstrap/base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
-{% block content %}
-<nav class="navbar navbar-dark bg-primary">
-  <a class="navbar-brand" style="color:white;" href="/">CryptoEHR</a>
-  <a class="navbar-brand" style=" color:white; vertical-align: middle; float: right; font-size: 15px;" href="login">Login</a>
-  <a class="navbar-brand" style="color:white; vertical-align: middle; float: right; font-size: 15px;" href="patientreg">Patient Signup</a>
-  <a class="navbar-brand" style="color:white; vertical-align: middle; float: right; font-size: 15px;" href="auditreg">Audit Signup</a>
-</nav>
-<div class="container">
-  <h3>Welcome to the Electronic Health System using Blockchain!</h3>
-  <img sytle="max-width: 100%; height: auto;" src="/static/img/Blockchainhealth.png" alt="Blockchain Health" width="1000">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EHR Chain — Decentralized Health Records</title>
+  <meta name="description" content="A decentralized electronic health record system secured by Ethereum blockchain technology.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy:    { DEFAULT: '#0A0F1E', 800: '#0D1426', 700: '#111827' },
+            cyan:    { DEFAULT: '#00D4FF', dark: '#00A8CC' },
+            emerald: { DEFAULT: '#00E5A0', dark: '#00B87A' },
+            coral:   { DEFAULT: '#FF4D6D', dark: '#CC3A55' },
+            amber:   { DEFAULT: '#FFB830', dark: '#CC9020' },
+          },
+          fontFamily: {
+            sans:    ['Inter', 'sans-serif'],
+            heading: ['Space Grotesk', 'sans-serif'],
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4,0,0.6,1) infinite',
+            'slide-up':   'slideUp 0.6s ease forwards',
+            'fade-in':    'fadeIn 0.5s ease forwards',
+            'float':      'float 6s ease-in-out infinite',
+          },
+          keyframes: {
+            slideUp:  { '0%': { opacity: 0, transform: 'translateY(30px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+            fadeIn:   { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
+            float:    { '0%,100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-12px)' } },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0A0F1E; }
+    .mesh-bg {
+      background-image: radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.07) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(0, 229, 160, 0.07) 0%, transparent 50%),
+                        radial-gradient(circle at 50% 80%, rgba(147, 51, 234, 0.05) 0%, transparent 50%);
+    }
+    .grid-pattern {
+      background-image: linear-gradient(rgba(0, 212, 255, 0.04) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0, 212, 255, 0.04) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+    .glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+    .gradient-text { background: linear-gradient(135deg, #00D4FF, #00E5A0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .card-glow:hover { box-shadow: 0 0 30px rgba(0, 212, 255, 0.12); }
+  </style>
+</head>
+<body class="bg-navy text-white font-sans min-h-screen antialiased mesh-bg">
 
-  <p>Distributed EHR System - All humans working for you.</p>
-</div>
-<footer class="bg-light text-center text-lg-start" style="position: absolute; bottom: 0; right:0; left:0;">
-  <!-- Copyright -->
-  <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);  padding: 20px;">
-    © 2021 Copyright:
-    <a class="text-dark" href="https://github.com/cumbul">Kivilcim(Kylie) Cumbul</a>
-  </div>
-  <!-- Copyright -->
-</footer>
-{% endblock %}
+  <!-- Grid overlay -->
+  <div class="fixed inset-0 grid-pattern opacity-50 pointer-events-none"></div>
+
+  <!-- Navbar -->
+  <nav class="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/5">
+    <a href="/" class="flex items-center gap-2 font-heading font-bold text-xl">
+      <i class="fa-solid fa-cube text-cyan-DEFAULT" style="color:#00D4FF"></i>
+      <span class="gradient-text">EHR Chain</span>
+    </a>
+    <div class="flex items-center gap-2">
+      <a href="/login" class="px-4 py-2 text-sm text-white/70 hover:text-white transition-colors" aria-label="Login">Login</a>
+      <a href="/patientreg" class="px-4 py-2 text-sm text-white/70 hover:text-white transition-colors" aria-label="Patient Signup">Patient Signup</a>
+      <a href="/auditreg" class="px-4 py-2 text-sm font-semibold rounded-xl border border-white/10 hover:border-white/30 transition-all" style="color:#00D4FF" aria-label="Doctor Signup">Doctor Signup</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <main class="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-200px)] px-6 text-center">
+
+    <!-- Badge -->
+    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-xs font-medium mb-8 animate-fade-in" style="color:#00E5A0">
+      <span class="w-2 h-2 rounded-full animate-pulse-slow" style="background:#00E5A0"></span>
+      Powered by Ethereum Blockchain
+    </div>
+
+    <!-- Main Headline -->
+    <h1 class="font-heading font-bold text-5xl md:text-7xl leading-tight mb-6 animate-slide-up" style="animation-delay:0.1s">
+      Decentralized<br>
+      <span class="gradient-text">Health Records</span>
+    </h1>
+
+    <p class="text-white/50 text-lg md:text-xl max-w-2xl mb-10 animate-slide-up" style="animation-delay:0.2s">
+      Your medical data, secured by cryptography and stored immutably on the blockchain. No central authority. No data breaches. Just trust.
+    </p>
+
+    <!-- CTA Buttons -->
+    <div class="flex flex-col sm:flex-row gap-4 mb-20 animate-slide-up" style="animation-delay:0.3s">
+      <a href="/patientreg" id="cta-patient" aria-label="Patient Login" class="flex items-center gap-3 px-8 py-4 rounded-xl font-heading font-semibold text-navy transition-all duration-200 hover:scale-105 active:scale-95" style="background:#00D4FF">
+        <i class="fa-solid fa-user-injured"></i>
+        Patient Portal
+      </a>
+      <a href="/auditreg" id="cta-doctor" aria-label="Doctor Login" class="flex items-center gap-3 px-8 py-4 rounded-xl font-heading font-semibold transition-all duration-200 hover:scale-105 active:scale-95 glass" style="color:#00E5A0; border:1px solid rgba(0,229,160,0.3)">
+        <i class="fa-solid fa-user-doctor"></i>
+        Doctor Portal
+      </a>
+    </div>
+
+    <!-- Feature Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl w-full animate-slide-up" style="animation-delay:0.4s">
+      <div class="glass rounded-2xl p-6 text-left card-glow transition-all duration-300">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(0,212,255,0.1)">
+          <i class="fa-solid fa-shield-halved" style="color:#00D4FF"></i>
+        </div>
+        <h3 class="font-heading font-semibold text-white mb-2">Security</h3>
+        <p class="text-white/40 text-sm">AES-256 encryption and Fernet key protection for all personal data.</p>
+      </div>
+
+      <div class="glass rounded-2xl p-6 text-left card-glow transition-all duration-300">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(0,229,160,0.1)">
+          <i class="fa-solid fa-eye-slash" style="color:#00E5A0"></i>
+        </div>
+        <h3 class="font-heading font-semibold text-white mb-2">Privacy</h3>
+        <p class="text-white/40 text-sm">Only you decide who can read your medical records. Revoke access anytime.</p>
+      </div>
+
+      <div class="glass rounded-2xl p-6 text-left card-glow transition-all duration-300">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(255,184,48,0.1)">
+          <i class="fa-solid fa-link" style="color:#FFB830"></i>
+        </div>
+        <h3 class="font-heading font-semibold text-white mb-2">Immutability</h3>
+        <p class="text-white/40 text-sm">Records written to Ethereum cannot be altered or deleted by anyone.</p>
+      </div>
+
+      <div class="glass rounded-2xl p-6 text-left card-glow transition-all duration-300">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(147,51,234,0.1)">
+          <i class="fa-solid fa-key" style="color:#A855F7"></i>
+        </div>
+        <h3 class="font-heading font-semibold text-white mb-2">Access Control</h3>
+        <p class="text-white/40 text-sm">Smart contracts enforce role-based access to every health record.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+ 
+</body>
+</html>

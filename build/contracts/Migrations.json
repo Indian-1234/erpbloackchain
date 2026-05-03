@@ -50,7 +50,7 @@
   "sourceMap": "66:352:0:-:0;;;113:10;90:33;;;;;;;;;;;;;;;;;;;;66:352;5:9:-1;2:2;;;27:1;24;17:12;2:2;66:352:0;;;;;;;",
   "deployedSourceMap": "66:352:0:-:0;;;;5:9:-1;2:2;;;27:1;24;17:12;2:2;66:352:0;;;;;;;;;;;;;;;;;;;;;;;;;;;12:1:-1;9;2:12;127:36:0;;;:::i;:::-;;;;;;;;;;;;;;;;;;;90:33;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;313:103;;;;;;15:2:-1;10:3;7:11;4:2;;;31:1;28;21:12;4:2;313:103:0;;;;;;;;;;;;;;;;;:::i;:::-;;127:36;;;;:::o;90:33::-;;;;;;;;;;;;;:::o;313:103::-;225:5;;;;;;;;;;;211:19;;:10;:19;;;196:101;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;402:9:::1;375:24;:36;;;;313:103:::0;:::o",
   "source": "// SPDX-License-Identifier: MIT\npragma solidity >=0.4.22 <0.9.0;\n\ncontract Migrations {\n  address public owner = msg.sender;\n  uint public last_completed_migration;\n\n  modifier restricted() {\n    require(\n      msg.sender == owner,\n      \"This function is restricted to the contract's owner\"\n    );\n    _;\n  }\n\n  function setCompleted(uint completed) public restricted {\n    last_completed_migration = completed;\n  }\n}\n",
-  "sourcePath": "/Users/kivilcim/Desktop/csci531/project/flask/contracts/Migrations.sol",
+  "sourcePath": "/Users/indianmanokaran/workplace/freelancing/blockchain/hospital/EHRBlockchain/contracts/Migrations.sol",
   "ast": {
     "absolutePath": "project:/contracts/Migrations.sol",
     "exportedSymbols": {
@@ -934,18 +934,18 @@
   },
   "compiler": {
     "name": "solc",
-    "version": "0.6.6+commit.6c089d02.Linux.g++"
+    "version": "0.6.6+commit.6c089d02.Emscripten.clang"
   },
   "networks": {
     "5777": {
       "events": {},
       "links": {},
-      "address": "0xbee48f02b90260Ac0Db3Ccb55Fbec34ffE09d9Db",
-      "transactionHash": "0xdf10719daca3830f52a3aff8d79f6ce2f2c13fb8d4addb7b5862f61d07e7fb3d"
+      "address": "0x788c7c58605568b07dF4D13C813D6Ab0DF93ad94",
+      "transactionHash": "0xf92710cdc4db52423f65a20954f89dc044e84919089a03cc42fb3043fe4e1e99"
     }
   },
-  "schemaVersion": "3.4.2",
-  "updatedAt": "2021-08-04T01:20:29.610Z",
+  "schemaVersion": "3.4.16",
+  "updatedAt": "2026-04-16T04:20:17.217Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {}

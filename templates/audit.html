@@ -1,197 +1,372 @@
-{% extends "bootstrap/base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <style>
-        .noCopy {
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EHR Chain — Doctor Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter','sans-serif'], heading: ['Space Grotesk','sans-serif'] },
+          animation: { 'pulse-slow': 'pulse 3s cubic-bezier(0.4,0,0.6,1) infinite', 'slide-up': 'slideUp 0.5s ease forwards' },
+          keyframes: { slideUp: { '0%': { opacity:0, transform:'translateY(16px)' }, '100%': { opacity:1, transform:'translateY(0)' } } }
         }
-    </style>
+      }
+    }
+  </script>
+  <style>
+    body { background-color:#0A0F1E; }
+    .glass { background:rgba(255,255,255,0.04); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); }
+    .glass-hover:hover { background:rgba(255,255,255,0.06); }
+    .input-field { width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:11px 16px; color:white; outline:none; transition:all 0.2s; font-family:'Inter',sans-serif; font-size:0.9rem; }
+    .input-field::placeholder { color:rgba(255,255,255,0.25); }
+    .input-field:focus { border-color:#8B5CF6; box-shadow:0 0 0 1px rgba(139,92,246,0.25); }
+    .textarea-field { width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:12px 16px; color:white; outline:none; transition:all 0.2s; font-family:'Inter',sans-serif; font-size:0.9rem; resize:vertical; min-height:140px; }
+    .textarea-field::placeholder { color:rgba(255,255,255,0.25); }
+    .textarea-field:focus { border-color:#8B5CF6; box-shadow:0 0 0 1px rgba(139,92,246,0.25); }
+    .card-v { border-left:3px solid #8B5CF6; }
+    .card-c { border-left:3px solid #00D4FF; }
+    .card-e { border-left:3px solid #00E5A0; }
+    ::-webkit-scrollbar { width:5px; }
+    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:3px; }
+    /* Hide WTForms default label/wrapper for fields we manually render */
+    .nolabel label, .nolabel .help-block { display:none !important; }
+    .nolabel input, .nolabel textarea { background:rgba(255,255,255,0.05)!important; border:1px solid rgba(255,255,255,0.1)!important; border-radius:12px!important; padding:11px 16px!important; color:white!important; width:100%!important; outline:none!important; font-family:'Inter',sans-serif!important; }
+  </style>
 </head>
-<!--navbar-->
-<nav class="navbar navbar-dark bg-primary">
-  <a class="navbar-brand" style="color:white;" href="/">CryptoEHR</a>
-    <a class="navbar-brand" style="color:white; vertical-align: middle; float: right; font-size: 15px;" href="/">Log Out</a>
-    <a class="navbar-brand" style=" color:white; vertical-align: middle; float: right; font-size: 15px;" href="/patient">Logged In</a>
-</nav>
-<!--navbar end-->
-<div class="row">
+<body class="bg-[#0A0F1E] text-white font-sans min-h-screen antialiased flex">
 
-<!--audit actions-->
-    <div class="container col-md-6" style="margin-left: 10%">
- <h3>Audit actions</h3>
-    <ul>
-        <li class="list-group-item">Account Address: {{username}}</li>
-        {% if contract_address != "0" %}
-        <li class="list-group-item">Contract Address to Audit: {{contract_address}}</li>
+  <!-- SIDEBAR -->
+  <aside class="hidden lg:flex flex-col w-64 shrink-0 border-r border-white/5 sticky top-0 h-screen overflow-y-auto" style="background:#07090F">
+    <div class="px-6 py-5 border-b border-white/5">
+      <a href="/" class="flex items-center gap-2 font-heading font-bold text-lg">
+        <i class="fa-solid fa-cube" style="color:#8B5CF6"></i>
+        <span style="background:linear-gradient(135deg,#8B5CF6,#00D4FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent">EHR Chain</span>
+      </a>
+    </div>
+    <div class="px-6 py-5 border-b border-white/5">
+      <div class="w-12 h-12 rounded-2xl flex items-center justify-center font-heading font-bold text-white mb-3 text-lg" style="background:#8B5CF6">Dr</div>
+      <p class="font-semibold text-white text-sm mb-0.5">Doctor / Auditor</p>
+      <p class="text-white/40 text-xs font-mono break-all">{{ username[:20] if username else '—' }}…</p>
+      <div class="flex items-center gap-1.5 mt-2 text-xs" style="color:#00E5A0">
+        <i class="fa-solid fa-circle-check text-xs"></i> Verified Doctor
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-1">
+      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium" style="color:#8B5CF6;background:rgba(139,92,246,0.1)">
+        <i class="fa-solid fa-house w-4"></i> Dashboard
+      </a>
+      <a href="#sec-connect" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/60 font-medium transition-all glass-hover hover:text-white">
+        <i class="fa-solid fa-link w-4"></i> Connect Patient
+      </a>
+      <a href="#sec-update" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/60 font-medium transition-all glass-hover hover:text-white">
+        <i class="fa-solid fa-pen-to-square w-4"></i> Update Records
+      </a>
+      <a href="#sec-read" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/60 font-medium transition-all glass-hover hover:text-white">
+        <i class="fa-solid fa-magnifying-glass w-4"></i> Read Records
+      </a>
+    </nav>
+    <div class="px-3 pb-6">
+      <a href="/" aria-label="Log Out" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/40 font-medium transition-all hover:text-white hover:bg-white/5">
+        <i class="fa-solid fa-right-from-bracket w-4"></i> Log Out
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+    <!-- Top bar -->
+    <header class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+      <div>
+        <h1 class="font-heading font-bold text-xl">Audit Dashboard</h1>
+        <p class="text-white/40 text-xs mt-0.5 font-mono">{{ username }}</p>
+      </div>
+      <div class="flex items-center gap-3">
+        {% if contract_address and contract_address != "0" and contract_address != None %}
+        <span class="hidden sm:flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg" style="background:rgba(0,229,160,0.08);color:#00E5A0;border:1px solid rgba(0,229,160,0.2)">
+          <span class="w-1.5 h-1.5 rounded-full animate-pulse-slow" style="background:#00E5A0"></span>
+          {{ contract_address[:14] }}…
+        </span>
         {% endif %}
-    </ul>
-  <hr>
-    <form action="" method="post" class="form" role="form">
-        {{ form.csrf_token() }}
-        <div class="row">
-            <div class="form-group col-md-8">
-                {{ wtf.form_field(form.contract_address, class='form-control',
-                placeholder='Patient Contract Address to View Medical Records') }}
-                <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content;" value="VALUE10" name="action10">Submit</button>
+        <a href="/" aria-label="Log Out" class="px-3 py-1.5 text-sm rounded-xl glass glass-hover transition-all text-white/60 hover:text-white">
+          <i class="fa-solid fa-right-from-bracket mr-1"></i>Log Out
+        </a>
+      </div>
+    </header>
 
+    <!-- Body -->
+    <div class="flex flex-1 overflow-y-auto">
+
+      <!-- Forms -->
+      <div class="flex-1 p-6 space-y-6 max-w-2xl">
+
+        <!-- ── SECTION A: Connect Patient ── -->
+        <section id="sec-connect" class="glass rounded-2xl p-6 card-v animate-slide-up">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(139,92,246,0.15)">
+              <i class="fa-solid fa-link" style="color:#8B5CF6"></i>
             </div>
-        </div>
-
-    </form>
-    <hr>
-  <form action="" method="post" class="form" role="form">
-   {{ form.csrf_token() }}
-   <div class="row">
-      <div class="form-group col-md-8">
-       {{ wtf.form_field(form.print_record, class='form-control', 
-          placeholder='Record ID') }}
-       <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content;" value="VALUE1" name="action1">Print</button>
-
-      </div>
-    </div>
-    
-  </form>
-  <hr>
-    <form action="" method="post" class="form" role="form">
-        {{ form.csrf_token() }}
-        <div class="row">
-            <div class="form-group col-md-8">
-                {{ wtf.form_field(form.copy_record, class='form-control',
-                placeholder='Record ID') }}
-                <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content;" value="VALUE4" name="action4">Copy </button>
-
+            <div>
+              <h2 class="font-heading font-semibold text-white">Connect to Patient Vault</h2>
+              <p class="text-white/40 text-xs">Links your session to patient's smart contract</p>
             </div>
-        </div>
+          </div>
+          {% if contract_address and contract_address != "0" and contract_address != None %}
+          <div class="flex items-center gap-2 p-3 rounded-xl mb-4 text-xs" style="background:rgba(0,229,160,0.07);border:1px solid rgba(0,229,160,0.2);color:#00E5A0">
+            <i class="fa-solid fa-circle-check"></i>
+            Connected to: <span class="font-mono ml-1">{{ contract_address }}</span>
+          </div>
+          {% endif %}
+          <form action="" method="post" role="form">
+            {{ form.csrf_token() }}
+            <div class="space-y-3">
+              <label for="contract_address_input" class="block text-sm text-white/50">Patient Contract Address (QR code in registration)</label>
+              {{ form.contract_address(id="contract_address_input", class="input-field", placeholder="Patient Contract Address to View Medical Records", **{"aria-label": "Patient Contract Address"}) }}
+              <button type="submit" name="action10" value="VALUE10" aria-label="Connect to Patient Vault" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-heading font-semibold text-white text-sm transition-all duration-200 hover:opacity-90 active:scale-95" style="background:#8B5CF6">
+                <i class="fa-solid fa-link"></i> Connect to Patient Vault
+              </button>
+            </div>
+          </form>
+        </section>
 
-    </form>
-    <hr>
-  <form action="" method="post" class="form" role="form">
-   {{ form.csrf_token() }}
-   <div class="row">
-      <div class="form-group col-md-8">
-          {{ wtf.form_field(form.update_record_id, class='form-control',
-          placeholder='Record ID') }}
-          {{ wtf.form_field(form.update_record_rec, class='form-control',
-          placeholder='Record Details') }}
-       <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content;" value="VALUE2" name="action2">Update </button>
+        <!-- ── SECTION B: Print Record ── -->
+        <section class="glass rounded-2xl p-6 card-c animate-slide-up" style="animation-delay:0.05s">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(0,212,255,0.12)">
+              <i class="fa-solid fa-print" style="color:#00D4FF"></i>
+            </div>
+            <h2 class="font-heading font-semibold text-white">Print Medical Record</h2>
+          </div>
+          <form action="" method="post" role="form">
+            {{ form.csrf_token() }}
+            <div class="space-y-3">
+              <label for="print_record" class="block text-sm text-white/50">Record ID</label>
+              {{ form.print_record(id="print_record", class="input-field", placeholder="Record ID", **{"aria-label": "Record ID to Print"}) }}
+              <button type="submit" name="action1" value="VALUE1" aria-label="Print Record" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-heading font-semibold text-navy text-sm transition-all hover:opacity-90 active:scale-95" style="background:#00D4FF">
+                <i class="fa-solid fa-print"></i> Print Record
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ── SECTION C: Copy Record ── -->
+        <section class="glass rounded-2xl p-6 animate-slide-up" style="animation-delay:0.08s; border-left:3px solid rgba(255,255,255,0.15)">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(255,255,255,0.06)">
+              <i class="fa-solid fa-copy text-white/60"></i>
+            </div>
+            <h2 class="font-heading font-semibold text-white">Copy Medical Record</h2>
+          </div>
+          <form action="" method="post" role="form">
+            {{ form.csrf_token() }}
+            <div class="space-y-3">
+              <label for="copy_record" class="block text-sm text-white/50">Record ID</label>
+              {{ form.copy_record(id="copy_record", class="input-field", placeholder="Record ID", **{"aria-label": "Record ID to Copy"}) }}
+              <button type="submit" name="action4" value="VALUE4" aria-label="Copy Record" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-heading font-semibold text-sm transition-all hover:opacity-90 active:scale-95 glass" style="color:white;border:1px solid rgba(255,255,255,0.2)">
+                <i class="fa-solid fa-copy"></i> Copy Record
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ── SECTION D: Update Record ── -->
+        <section id="sec-update" class="glass rounded-2xl p-6 card-e animate-slide-up" style="animation-delay:0.1s">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(0,229,160,0.12)">
+                <i class="fa-solid fa-pen-to-square" style="color:#00E5A0"></i>
+              </div>
+              <div>
+                <h2 class="font-heading font-semibold text-white">Update Medical Records</h2>
+                <p class="text-white/40 text-xs">Write clinical notes to the blockchain</p>
+              </div>
+            </div>
+            <span class="flex items-center gap-1.5 text-xs" style="color:#00E5A0">
+              <span class="w-1.5 h-1.5 rounded-full animate-pulse-slow" style="background:#00E5A0"></span>
+              On-chain
+            </span>
+          </div>
+          <form action="" method="post" role="form">
+            {{ form.csrf_token() }}
+            <div class="space-y-4">
+              <div>
+                <label for="update_record_id" class="block text-sm text-white/50 mb-2">Record ID (from patient's QR code)</label>
+                {{ form.update_record_id(id="update_record_id", class="input-field", placeholder="Record ID", **{"aria-label": "Record ID to Update"}) }}
+              </div>
+              <div>
+                <label for="update_record_rec" class="block text-sm text-white/50 mb-2">Medical Notes / New Record</label>
+                {{ form.update_record_rec(id="update_record_rec", class="textarea-field", placeholder="Enter clinical notes, diagnosis, prescription...", **{"aria-label": "Medical Record Details"}) }}
+              </div>
+              <button type="submit" name="action2" value="VALUE2" aria-label="Save to Blockchain" class="flex items-center justify-center gap-2 w-full px-6 py-3 rounded-xl font-heading font-semibold text-navy text-sm transition-all hover:opacity-90 active:scale-95" style="background:#00E5A0">
+                <i class="fa-solid fa-floppy-disk"></i> Save to Blockchain
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ── SECTION E: Query / List ── -->
+        <section id="sec-read" class="glass rounded-2xl p-6 animate-slide-up" style="animation-delay:0.12s; border-left:3px solid #FFB830">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(255,184,48,0.12)">
+              <i class="fa-solid fa-magnifying-glass" style="color:#FFB830"></i>
+            </div>
+            <h2 class="font-heading font-semibold text-white">Query Medical Records</h2>
+          </div>
+          <form action="" method="post" role="form">
+            {{ form.csrf_token() }}
+            <div class="space-y-3">
+              <label for="query" class="block text-sm text-white/50">Record ID (leave blank to list all)</label>
+              {{ form.query(id="query", class="input-field", placeholder="Record ID (optional)", **{"aria-label": "Record ID to Query"}) }}
+              <div class="flex gap-3">
+                <button type="submit" name="action3" value="VALUE3" aria-label="Query Record" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-heading font-semibold text-navy text-sm transition-all hover:opacity-90 active:scale-95" style="background:#FFB830">
+                  <i class="fa-solid fa-magnifying-glass"></i> Query
+                </button>
+                <button type="submit" name="action30" value="VALUE30" aria-label="List all Unique IDs" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-heading font-semibold text-sm transition-all hover:opacity-80 active:scale-95 glass" style="color:#FFB830;border:1px solid rgba(255,184,48,0.3)">
+                  <i class="fa-solid fa-list"></i> List Unique IDs
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <!-- ── SECTION F: Delete Record ── -->
+        <section class="glass rounded-2xl p-6 animate-slide-up" style="animation-delay:0.14s; border-left:3px solid #FF4D6D">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(255,77,109,0.12)">
+              <i class="fa-solid fa-trash" style="color:#FF4D6D"></i>
+            </div>
+            <h2 class="font-heading font-semibold text-white">Delete Medical Record</h2>
+          </div>
+          <form action="" method="post" role="form">
+            {{ form.csrf_token() }}
+            <div class="space-y-3">
+              <label for="delete_record" class="block text-sm text-white/50">Record ID</label>
+              {{ form.delete_record(id="delete_record", class="input-field", placeholder="Record ID", **{"aria-label": "Record ID to Delete"}) }}
+              <button type="submit" name="action5" value="VALUE5" aria-label="Delete Record" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-heading font-semibold text-sm transition-all active:scale-95" style="background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.3);color:#FF4D6D">
+                <i class="fa-solid fa-trash"></i> Delete Record
+              </button>
+            </div>
+          </form>
+        </section>
 
       </div>
-    </div>
-    
-  </form>
-  <hr>
-  <form action="" method="post" class="form" role="form">
-   {{ form.csrf_token() }}
-   <div class="row">
-      <div class="form-group col-md-8">
-       {{ wtf.form_field(form.query, class='form-control', 
-          placeholder='Record ID') }}
-          <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content; margin-right: 10px" value="VALUE3" name="action3">Query</button>
-          <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content;" value="VALUE30" name="action30">List Unique ID's</button>
 
-      </div>
-    </div>
-    
-  </form>
-  <hr>
-  <form action="" method="post" class="form" role="form">
-   {{ form.csrf_token() }}
-   <div class="row">
-      <div class="form-group col-md-8">
-       {{ wtf.form_field(form.delete_record, class='form-control', 
-          placeholder='Record ID') }}
-       <button type="submit" class="btn btn-primary col-md-3" style="width: fit-content;" value="VALUE5" name="action5">Delete</button>
-
-      </div>
-    </div>
-    
-  </form>
-
-  <hr>
-  <p>Distributed EHR System - All humans working for you.</p>
-</div>
-<!--audit actions end -->
-
-<!--results-->
-    <div class="container col-md-4">
+      <!-- RESULTS SIDE PANEL — all Jinja2 preserved -->
+      <div class="w-96 shrink-0 p-6">
         {% if isCard == True %}
         {% block content1 %}
-        <div class="card noCopy" style="width: 48rem; position: fixed; top: 30%;">
-            <div class="card-body">
-                <h5 class="card-title">Action: {{result}}</h5>
-                <p class="card-text"><b>Details:</b>
-                </p>
+        <div class="glass rounded-2xl p-5 sticky top-6 animate-slide-up" style="border-color:rgba(139,92,246,0.2)">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(139,92,246,0.15)">
+              <i class="fa-solid fa-bolt text-sm" style="color:#8B5CF6"></i>
             </div>
-            <ul class="list-group list-group-flush">
-                {% if isStart == True %}
-                <li class="list-group-item"><b>Appointment Date:</b> {{date}}</li>
-                {% endif %}
-                <li class="list-group-item"><b>Tx Hash:</b> {{tx_hash[:40]}}...</li>
-                {% if event_logs[0]['args']['record_unique_id'] %}
-                <li class="list-group-item"><b>Unique Record ID:</b>  {{event_logs[0]['args']['record_unique_id']}} </li>
-                <li class="list-group-item"> Show this to your doctor to audit this record:<br>
-                    <img src={{qr_code}} alt="" title="" />
-                </li>
-
-                {% endif %}
-                {% if event_logs[0]['args']['record_msg'] %}
-                <li class="list-group-item"><b>Record Message:</b>  {{event_logs[0]['args']['record_msg']}} </li>
-                <li class="list-group-item"><b>Record Status:</b> {{event_logs[0]['args']['record_status']}}
-                    <br>(0-Created, 1-Deleted, 2-Changed, 3-Queried, 4-Printed, 5-Copied)</li>
-
-                {% endif %}
-                {% if event_logs[0]['args']['return_msg'] %}
-                <li class="list-group-item"><b>Event Log:</b>  {{event_logs[0]['args']['return_msg']}} </li>
-                <li class="list-group-item"><b>Address:</b>  {{event_logs[0]['args']['doctor_address']}} </li>
-                <li class="list-group-item"><b>Epoch time:</b>  {{event_logs[0]['args']['record_time']}} </li>
-                {% endif %}
-            </ul>
-
-            <div class="card-body">
-                {% if record_details %}
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><b>Medical Record Details:</b> </li>
-                    <li class="list-group-item">{{record_details}}</li>
-                </ul>
-                {% endif %}
+            <div>
+              <p class="text-xs text-white/40">Transaction Result</p>
+              <p class="font-heading font-semibold text-sm text-white">{{ result }}</p>
             </div>
+          </div>
+          <div class="space-y-3">
+            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)">
+              <p class="text-xs text-white/40 mb-1">Tx Hash</p>
+              <p class="text-xs font-mono text-white break-all">{{ tx_hash[:40] }}...</p>
+            </div>
+            {% if event_logs[0]['args']['record_unique_id'] %}
+            <div class="p-3 rounded-xl" style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.2)">
+              <p class="text-xs mb-1" style="color:rgba(139,92,246,0.8)">Unique Record ID</p>
+              <p class="text-xs font-mono text-white break-all" id="rec-id">{{ event_logs[0]['args']['record_unique_id'] }}</p>
+              <button onclick="copyText(document.getElementById('rec-id').textContent.trim())" class="mt-2 text-xs px-3 py-1 rounded-lg" style="background:rgba(139,92,246,0.1);color:#8B5CF6;border:1px solid rgba(139,92,246,0.2)">
+                <i class="fa-solid fa-copy mr-1"></i>Copy
+              </button>
+            </div>
+            <div class="p-3 rounded-xl text-center" style="background:rgba(255,255,255,0.02)">
+              <p class="text-xs text-white/30 mb-2">Patient QR Code</p>
+              <img src={{qr_code}} alt="QR Code" class="mx-auto rounded-lg" style="max-width:130px"/>
+            </div>
+            {% endif %}
+            {% if event_logs[0]['args']['record_msg'] %}
+            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)">
+              <p class="text-xs text-white/40 mb-1">Record Message</p>
+              <p class="text-xs text-white">{{ event_logs[0]['args']['record_msg'] }}</p>
+            </div>
+            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)">
+              <p class="text-xs text-white/40 mb-1">Status</p>
+              <p class="text-xs text-white">{{ event_logs[0]['args']['record_status'] }} <span class="text-white/30">(0=Created 1=Deleted 2=Changed 3=Queried 4=Printed 5=Copied)</span></p>
+            </div>
+            {% endif %}
+            {% if event_logs[0]['args']['return_msg'] %}
+            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)">
+              <p class="text-xs text-white/40 mb-1">Event Log</p>
+              <p class="text-xs text-white">{{ event_logs[0]['args']['return_msg'] }}</p>
+              <p class="text-xs text-white/50 font-mono mt-1 break-all">{{ event_logs[0]['args']['doctor_address'] }}</p>
+              <p class="text-xs text-white/30 mt-1">Epoch: {{ event_logs[0]['args']['record_time'] }}</p>
+            </div>
+            {% endif %}
+            {% if record_details %}
+            <div class="p-3 rounded-xl" style="background:rgba(0,229,160,0.06);border:1px solid rgba(0,229,160,0.2)">
+              <p class="text-xs mb-1" style="color:#00E5A0">Medical Record Details</p>
+              <p class="text-sm text-white leading-relaxed">{{ record_details }}</p>
+            </div>
+            {% endif %}
+          </div>
         </div>
         {% endblock %}
         {% endif %}
 
-        {% if isDF%}
+        {% if isDF %}
         {% block content2 %}
-        <div class="card" style="width: 48rem; position: fixed; top: 30%;">
-            <div class="card-body">
-                <h5 class="card-title">Unique Medical Record IDs:</h5>
-                </p>
+        <div class="glass rounded-2xl p-5 sticky top-6">
+          <h3 class="font-heading font-semibold text-white mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-list" style="color:#FFB830"></i> Unique Record IDs
+          </h3>
+          <div class="space-y-2">
+            {% for key,value in filtered_df.iterrows() %}
+            <div class="p-3 rounded-xl flex items-center justify-between" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)">
+              <div>
+                <p class="text-xs text-white/40 font-mono">{{ value['contract_address'][0:10] }}…</p>
+                <p class="text-xs text-white font-mono mt-0.5" id="uid-{{ key }}">{{ value['unique_id'] }}</p>
+              </div>
+              <button onclick="copyText(document.getElementById('uid-{{ key }}').textContent.trim())" class="text-xs px-2 py-1 rounded-lg" style="background:rgba(255,184,48,0.1);color:#FFB830;border:1px solid rgba(255,184,48,0.2)">
+                <i class="fa-solid fa-copy"></i>
+              </button>
             </div>
-            <ul class="list-group list-group-flush">
-                {% for key,value in filtered_df.iterrows() %}
-                <li class="list-group-item"><b>{{ value['contract_address'][0:10] }}...:</b> {{value['unique_id']}}</li>
-                {% endfor %}
-            </ul>
-
+            {% endfor %}
+          </div>
         </div>
         {% endblock %}
         {% endif %}
+      </div>
+
     </div>
-<!--results end-->
-</div>
-<!--footer-->
-<footer class="bg-light text-center text-lg-start" style="position: float; bottom: 0; right:0; left:0;">
-  <!-- Copyright -->
-  <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);  padding: 20px;">
-    © 2021 Copyright:
-    <a class="text-dark" href="https://github.com/cumbul">Kivilcim(Kylie) Cumbul</a>
   </div>
-  <!-- Copyright -->
-</footer>
-<!--footer end-->
-{% endblock %}
+
+  <!-- Copy toast -->
+  <div id="copy-toast" class="fixed bottom-6 right-6 text-navy text-sm font-semibold px-4 py-2 rounded-xl opacity-0 transition-opacity duration-300 pointer-events-none" style="background:#00E5A0">
+    <i class="fa-solid fa-check mr-1"></i> Copied!
+  </div>
+
+  <script>
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const el = document.getElementById('copy-toast');
+        if (el) { el.classList.remove('opacity-0'); setTimeout(() => el.classList.add('opacity-0'), 2000); }
+      });
+    }
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', function() {
+        const btn = this.querySelector('button[type="submit"]');
+        if (btn) {
+          setTimeout(() => {
+            btn.style.opacity = '0.7';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing...';
+          }, 10);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
