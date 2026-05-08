@@ -8,15 +8,13 @@ from flask import Flask, request, render_template, redirect
 from model import AuditRegForm, AuditActions
 from model import PatientRegForm, PatientActions
 from model import LogForm
+from federated.fl_routes import fl_bp
 from flask_bootstrap import Bootstrap
 from flask_wtf.csrf import CSRFProtect
 import hashlib
 import pandas as pd
-import cryptography
 from cryptography.fernet import Fernet
-from datetime import datetime
 from dateutil import parser
-import clipboard
 from urllib.parse import quote
 import requests
 
@@ -86,6 +84,10 @@ app.config.from_mapping(
     SECRET_KEY=b'\xd6\x04\xbdj\xfe\xed$c\x1e@\xad\x0f\x13,@G')
 Bootstrap(app)
 csrf = CSRFProtect(app)
+app.register_blueprint(fl_bp)
+csrf.exempt(fl_bp)
+
+account_num = 0
 
 # Helper function to check blockchain connectivity
 def check_blockchain_connection():
@@ -174,11 +176,10 @@ def is_ipfs_cid(value):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     return render_template('index.html')
-global count_acc
+
 @app.route('/patientreg', methods=['GET', 'POST'])
 def patient_registration():
     form = PatientRegForm(request.form)
-    global count_acc
     if request.method == 'POST':
         if not form.validate_on_submit():
             # Show validation errors
@@ -664,7 +665,26 @@ def auditdash():
                 ipfs_cid = None
                 ipfs_source = None
                 is_binary = False
-            
+
+            # Auto-trigger FL local training for the hospital that updated this record
+            fl_hospital = request.form.get("fl_hospital", "Hospital_A")
+            try:
+                from federated.fl_routes import HOSPITALS, load_state, save_state, save_model_file
+                from federated.local_trainer import generate_hospital_data, train_local_model
+                from sklearn.model_selection import train_test_split
+                fl_state = load_state()
+                if fl_hospital in HOSPITALS and fl_hospital not in fl_state["trained"]:
+                    seed = HOSPITALS.index(fl_hospital) * 100
+                    X, y = generate_hospital_data(fl_hospital, seed=seed)
+                    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.25, random_state=42)
+                    model, scaler = train_local_model(X_train, y_train)
+                    save_model_file(fl_hospital, model, scaler)
+                    fl_state["trained"].append(fl_hospital)
+                    save_state(fl_state)
+                    print(f"[FL] Auto-trained {fl_hospital} after record update. Trained so far: {fl_state['trained']}")
+            except Exception as fl_err:
+                print(f"[FL] Auto-train skipped: {fl_err}")
+
             return render_template("audit.html", form=form, isCard=isCard, username=account_address, contract_address=contract_address, result=result, tx_receipt=tx_receipt, tx_hash=tx_hash.hex(), event_logs=event_logs, record_details=record_details, ipfs_cid=ipfs_cid, ipfs_upload_success=ipfs_upload_success, ipfs_source=ipfs_source, ipfs_gateway_url=IPFS_GATEWAY_URL, is_binary=is_binary)
 
         elif  request.form.get('action3') == 'VALUE3':

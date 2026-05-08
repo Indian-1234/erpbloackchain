@@ -5,139 +5,150 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EHR Chain — Doctor Registration</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background-color:#0A0F1E; font-family:'Inter',sans-serif; }
-    .glass { background:rgba(255,255,255,0.04); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.08); }
-    .gradient-text { background:linear-gradient(135deg,#8B5CF6,#00D4FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
-    .mesh-bg { background-image:radial-gradient(circle at 20% 20%,rgba(139,92,246,0.08) 0%,transparent 50%),radial-gradient(circle at 80% 80%,rgba(0,212,255,0.06) 0%,transparent 50%); }
-    .input-field { width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:11px 16px; color:white; outline:none; transition:all 0.2s; font-size:0.9rem; }
-    .input-field::placeholder { color:rgba(255,255,255,0.3); }
-    .input-field:focus { border-color:#8B5CF6; box-shadow:0 0 0 1px rgba(139,92,246,0.25); }
-    .field-error { color:rgba(255,77,109,0.9); font-size:0.75rem; margin-top:4px; }
-    @keyframes slideUp { 0%{opacity:0;transform:translateY(20px)} 100%{opacity:1;transform:translateY(0)} }
-    .animate-slide-up { animation:slideUp 0.5s ease forwards; }
+    :root { --bg:#07111E; --card:#112238; --border:rgba(255,255,255,0.07); --blue:#3B82F6; --emerald:#10B981; --purple:#8B5CF6; --amber:#F59E0B; --red:#EF4444; --text:#E2E8F0; --muted:#64748B; }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; }
+    .hfont { font-family:'Space Grotesk',sans-serif; }
+    .nav-link { color:#94A3B8; font-size:.875rem; padding:.45rem .875rem; border-radius:8px; transition:color .2s; }
+    .nav-link:hover { color:#fff; background:rgba(255,255,255,.05); }
+    .nav-active { color:var(--purple); font-weight:600; }
+    .input-field { width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09); border-radius:10px; padding:11px 14px; color:var(--text); outline:none; transition:all .2s; font-size:.875rem; font-family:'Inter',sans-serif; }
+    .input-field::placeholder { color:rgba(255,255,255,0.22); }
+    .input-field:focus { border-color:var(--purple); box-shadow:0 0 0 3px rgba(139,92,246,.15); }
+    .field-error { color:rgba(239,68,68,.9); font-size:.75rem; margin-top:.3rem; display:flex; align-items:center; gap:.3rem; }
+    label { font-size:.8125rem; font-weight:500; color:#94A3B8; display:block; margin-bottom:.4rem; }
+    .btn-primary { background:var(--purple); color:#fff; font-weight:600; padding:.875rem 1.5rem; border-radius:10px; font-family:'Space Grotesk',sans-serif; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:.5rem; width:100%; }
+    .btn-primary:hover { background:#7C3AED; }
+    .step { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:700; font-family:'Space Grotesk',sans-serif; }
+    .step-done { background:var(--purple); color:#fff; }
+    .step-active { background:rgba(139,92,246,.15); color:var(--purple); border:2px solid rgba(139,92,246,.4); }
+    .step-todo { background:rgba(255,255,255,.05); color:#475569; border:1px solid rgba(255,255,255,.1); }
+    @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .anim { animation:slideUp .5s ease forwards; }
   </style>
 </head>
-<body class="text-white min-h-screen antialiased mesh-bg">
+<body class="min-h-screen antialiased">
 
   <!-- Navbar -->
-  <nav class="flex items-center justify-between px-6 py-4 border-b border-white/5">
-    <a href="/" class="flex items-center gap-2 font-bold text-xl" style="font-family:'Space Grotesk',sans-serif">
-      <i class="fa-solid fa-cube" style="color:#8B5CF6"></i>
-      <span class="gradient-text">EHR Chain</span>
+  <nav class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid var(--border)">
+    <a href="/" class="flex items-center gap-2 hfont font-bold text-lg">
+      <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:var(--blue)">
+        <i class="fa-solid fa-heart-pulse text-white text-xs"></i>
+      </div>
+      <span class="text-white">EHR<span style="color:var(--blue)">Chain</span></span>
     </a>
-    <div class="flex items-center gap-2">
-      <a href="/login" class="px-4 py-2 text-sm text-white/60 hover:text-white transition-colors">Login</a>
-      <a href="/patientreg" class="px-4 py-2 text-sm text-white/60 hover:text-white transition-colors">Patient Signup</a>
-      <a href="/auditreg" class="px-4 py-2 text-sm font-semibold" style="color:#8B5CF6">Doctor Signup</a>
+    <div class="flex items-center gap-1">
+      <a href="/login" class="nav-link">Login</a>
+      <a href="/patientreg" class="nav-link">Patient Signup</a>
+      <a href="/auditreg" class="nav-link nav-active">Doctor Signup</a>
     </div>
   </nav>
 
-  <main class="flex flex-col items-center px-4 py-12">
+  <main class="flex flex-col items-center px-4 py-10">
 
-    <!-- Step Indicator -->
-    <div class="flex items-center gap-2 mb-10 animate-slide-up">
-      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background:#8B5CF6;font-family:'Space Grotesk',sans-serif">1</div>
-      <div class="w-12 h-px" style="background:rgba(139,92,246,0.3)"></div>
-      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style="background:rgba(139,92,246,0.15);color:#8B5CF6;border:1px solid rgba(139,92,246,0.3)">2</div>
-      <div class="w-12 h-px bg-white/10"></div>
-      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white/40" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">3</div>
+    <!-- Step indicator -->
+    <div class="flex items-center gap-2 mb-10 anim">
+      <div class="step step-done">1</div>
+      <div class="flex-1 h-px" style="background:rgba(139,92,246,.3);max-width:48px"></div>
+      <div class="step step-active">2</div>
+      <div class="flex-1 h-px" style="background:rgba(255,255,255,.07);max-width:48px"></div>
+      <div class="step step-todo">3</div>
     </div>
 
-    <!-- Card -->
-    <div class="glass rounded-2xl shadow-2xl w-full max-w-lg p-8 animate-slide-up" style="animation-delay:0.1s; border-color:rgba(139,92,246,0.15)">
+    <div class="w-full max-w-lg anim" style="animation-delay:.08s;background:var(--card);border:1px solid rgba(139,92,246,.15);border-radius:20px;padding:2.5rem 2rem;box-shadow:0 20px 50px rgba(0,0,0,.5)">
 
-      <div class="flex items-center gap-3 mb-6">
-        <div class="w-12 h-12 rounded-2xl flex items-center justify-center" style="background:rgba(139,92,246,0.15)">
-          <i class="fa-solid fa-user-doctor text-xl" style="color:#8B5CF6"></i>
+      <!-- Header -->
+      <div class="flex items-center gap-3 mb-7">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style="background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.2)">
+          <i class="fa-solid fa-user-doctor text-xl" style="color:var(--purple)"></i>
         </div>
         <div>
-          <h1 class="font-bold text-xl text-white" style="font-family:'Space Grotesk',sans-serif">Create Doctor Account</h1>
-          <p class="text-white/40 text-sm">Register as a verified medical professional</p>
+          <h1 class="hfont font-bold text-xl text-white">Create Doctor Account</h1>
+          <p class="text-sm mt-0.5" style="color:var(--muted)">Register as a verified medical professional</p>
         </div>
       </div>
 
-      <!-- Error — Jinja2 preserved -->
+      <!-- Error -->
       {% if error %}
-      <div class="flex items-start gap-3 p-4 rounded-xl mb-6" style="background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.3)">
-        <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0" style="color:#FF4D6D"></i>
-        <p class="text-sm" style="color:#FF4D6D">{{ error }}</p>
+      <div class="flex items-start gap-3 p-4 rounded-xl mb-5" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25)">
+        <i class="fa-solid fa-circle-xmark mt-0.5 shrink-0" style="color:var(--red)"></i>
+        <p class="text-sm" style="color:#FCA5A5">{{ error }}</p>
       </div>
       {% endif %}
 
-      <!-- Info box -->
-      <div class="flex items-start gap-3 p-4 rounded-xl mb-6" style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2)">
-        <i class="fa-solid fa-circle-info mt-0.5 shrink-0" style="color:#8B5CF6"></i>
-        <p class="text-sm text-white/70">Your <strong style="color:#8B5CF6">blockchain address</strong> will serve as your verified Doctor ID across the entire EHR network. Patients will use it to grant you access to their records.</p>
+      <!-- Info -->
+      <div class="flex items-start gap-3 p-4 rounded-xl mb-6" style="background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2)">
+        <i class="fa-solid fa-circle-info mt-0.5 shrink-0" style="color:var(--purple)"></i>
+        <p class="text-sm" style="color:#C4B5FD">Your <strong style="color:#DDD6FE">blockchain address</strong> becomes your verified Doctor ID across the EHR network. Patients grant you access using this address.</p>
       </div>
 
-      <!-- FORM — all Jinja2 fields manually rendered -->
-      <form action="" method="post" role="form" id="doctor-reg-form" class="space-y-4">
+      <!-- Form -->
+      <form action="" method="post" role="form" class="space-y-4">
         {{ form.csrf_token() }}
 
         <div>
-          <label for="account_number" class="block text-sm text-white/50 mb-1.5">Account Number (0–9)</label>
-          {{ form.account_number(id="account_number", class="input-field", **{"aria-label":"Account Number"}) }}
-          {% if form.account_number.errors %}{% for e in form.account_number.errors %}<p class="field-error">{{ e }}</p>{% endfor %}{% endif %}
+          <label for="account_number">Account Number <span style="color:var(--muted)">(0–9, from Ganache)</span></label>
+          {{ form.account_number(id="account_number", class="input-field", placeholder="e.g. 1", **{"aria-label":"Account Number"}) }}
+          {% if form.account_number.errors %}{% for e in form.account_number.errors %}<p class="field-error"><i class="fa-solid fa-triangle-exclamation"></i>{{ e }}</p>{% endfor %}{% endif %}
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label for="name_first" class="block text-sm text-white/50 mb-1.5">First Name</label>
-            {{ form.name_first(id="name_first", class="input-field", **{"aria-label":"First Name"}) }}
-            {% if form.name_first.errors %}{% for e in form.name_first.errors %}<p class="field-error">{{ e }}</p>{% endfor %}{% endif %}
+            <label for="name_first">First Name</label>
+            {{ form.name_first(id="name_first", class="input-field", placeholder="Dr. Jane", **{"aria-label":"First Name"}) }}
+            {% if form.name_first.errors %}{% for e in form.name_first.errors %}<p class="field-error"><i class="fa-solid fa-triangle-exclamation"></i>{{ e }}</p>{% endfor %}{% endif %}
           </div>
           <div>
-            <label for="name_last" class="block text-sm text-white/50 mb-1.5">Last Name</label>
-            {{ form.name_last(id="name_last", class="input-field", **{"aria-label":"Last Name"}) }}
-            {% if form.name_last.errors %}{% for e in form.name_last.errors %}<p class="field-error">{{ e }}</p>{% endfor %}{% endif %}
+            <label for="name_last">Last Name</label>
+            {{ form.name_last(id="name_last", class="input-field", placeholder="Smith", **{"aria-label":"Last Name"}) }}
+            {% if form.name_last.errors %}{% for e in form.name_last.errors %}<p class="field-error"><i class="fa-solid fa-triangle-exclamation"></i>{{ e }}</p>{% endfor %}{% endif %}
           </div>
         </div>
 
         <div>
-          <label for="email" class="block text-sm text-white/50 mb-1.5">Email Address</label>
-          {{ form.email(id="email", class="input-field", **{"aria-label":"Email Address"}) }}
-          {% if form.email.errors %}{% for e in form.email.errors %}<p class="field-error">{{ e }}</p>{% endfor %}{% endif %}
+          <label for="email">Email Address</label>
+          {{ form.email(id="email", class="input-field", placeholder="doctor@hospital.com", **{"aria-label":"Email Address"}) }}
+          {% if form.email.errors %}{% for e in form.email.errors %}<p class="field-error"><i class="fa-solid fa-triangle-exclamation"></i>{{ e }}</p>{% endfor %}{% endif %}
         </div>
 
         <div>
-          <label for="employee_id" class="block text-sm text-white/50 mb-1.5">Unique Employee ID</label>
-          {{ form.employee_id(id="employee_id", class="input-field", **{"aria-label":"Employee ID"}) }}
-          {% if form.employee_id.errors %}{% for e in form.employee_id.errors %}<p class="field-error">{{ e }}</p>{% endfor %}{% endif %}
+          <label for="employee_id">Unique Employee ID</label>
+          {{ form.employee_id(id="employee_id", class="input-field", placeholder="EMP-00000", **{"aria-label":"Employee ID"}) }}
+          {% if form.employee_id.errors %}{% for e in form.employee_id.errors %}<p class="field-error"><i class="fa-solid fa-triangle-exclamation"></i>{{ e }}</p>{% endfor %}{% endif %}
         </div>
 
-        <div>
-          <label for="password" class="block text-sm text-white/50 mb-1.5">Password</label>
-          {{ form.password(id="password", class="input-field", **{"aria-label":"Password"}) }}
-          {% if form.password.errors %}{% for e in form.password.errors %}<p class="field-error">{{ e }}</p>{% endfor %}{% endif %}
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="password">Password</label>
+            {{ form.password(id="password", class="input-field", placeholder="Create password", type="password", **{"aria-label":"Password"}) }}
+            {% if form.password.errors %}{% for e in form.password.errors %}<p class="field-error"><i class="fa-solid fa-triangle-exclamation"></i>{{ e }}</p>{% endfor %}{% endif %}
+          </div>
+          <div>
+            <label for="confirm">Confirm Password</label>
+            {{ form.confirm(id="confirm", class="input-field", placeholder="Repeat password", type="password", **{"aria-label":"Confirm Password"}) }}
+            {% if form.confirm.errors %}{% for e in form.confirm.errors %}<p class="field-error"><i class="fa-solid fa-triangle-exclamation"></i>{{ e }}</p>{% endfor %}{% endif %}
+          </div>
         </div>
 
-        <div>
-          <label for="confirm" class="block text-sm text-white/50 mb-1.5">Confirm Password</label>
-          {{ form.confirm(id="confirm", class="input-field", **{"aria-label":"Confirm Password"}) }}
-          {% if form.confirm.errors %}{% for e in form.confirm.errors %}<p class="field-error">{{ e }}</p>{% endfor %}{% endif %}
-        </div>
-
-        <button type="submit" id="submit-btn" aria-label="Register as Doctor" class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-semibold text-sm mt-2 transition-all hover:opacity-90 active:scale-95" style="background:#8B5CF6;color:white;font-family:'Space Grotesk',sans-serif">
+        <button type="submit" id="submit-btn" class="btn-primary mt-2" aria-label="Register as Doctor">
           <i class="fa-solid fa-user-doctor"></i> Register as Verified Doctor
         </button>
       </form>
 
-      <p class="text-white/30 text-xs mt-4 text-center">Already registered? <a href="/login" class="hover:text-white transition-colors" style="color:#8B5CF6">Login here</a></p>
+      <p class="text-xs mt-5 text-center" style="color:var(--muted)">
+        Already registered? <a href="/login" class="hover:text-white transition-colors" style="color:var(--purple)">Sign in</a>
+      </p>
     </div>
   </main>
-
-  <footer class="py-6 border-t border-white/5 text-center">
-  </footer>
 
   <script>
     document.querySelectorAll('form').forEach(form => {
       form.addEventListener('submit', () => {
         const btn = form.querySelector('button[type="submit"]');
-        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Registering...'; }
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Registering…'; }
       });
     });
   </script>

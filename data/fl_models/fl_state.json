@@ -1,0 +1,10 @@
+{
+  "round": 1,
+  "trained": [
+    "Hospital_A",
+    "Hospital_B",
+    "Hospital_C"
+  ],
+  "aggregated": true,
+  "last_aggregation": null
+}

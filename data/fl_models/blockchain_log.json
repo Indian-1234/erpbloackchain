@@ -1,0 +1,23 @@
+[
+  {
+    "provider": "Hospital_A",
+    "weight_hash": "a36323f21afa1f9aad003ac1f85f5768a87db273c6a3dfd62c6b57c5da704cc9",
+    "n_samples": 90,
+    "timestamp": "2026-05-08T16:42:05.309860Z",
+    "round": 1
+  },
+  {
+    "provider": "Hospital_B",
+    "weight_hash": "93822d90cc486ac2222a6154bd2678703e6f3eb314abd659a174ee2f2935ee02",
+    "n_samples": 71,
+    "timestamp": "2026-05-08T16:42:05.311308Z",
+    "round": 1
+  },
+  {
+    "provider": "Hospital_C",
+    "weight_hash": "6a67be213acbf9f1f2c5056588e9c2d1dd0bbe322d96213ffd7837ad48a8c234",
+    "n_samples": 82,
+    "timestamp": "2026-05-08T16:42:05.312873Z",
+    "round": 1
+  }
+]

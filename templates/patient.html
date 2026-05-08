@@ -4,110 +4,128 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EHR Chain — Patient Dashboard</title>
-  <meta name="description" content="Manage your blockchain health records and doctor access permissions.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy: { DEFAULT: '#0A0F1E', 800: '#0D1426', 700: '#111827' },
-            cyan: { DEFAULT: '#00D4FF', dark: '#00A8CC' },
-            emerald: { DEFAULT: '#00E5A0', dark: '#00B87A' },
-            coral: { DEFAULT: '#FF4D6D', dark: '#CC3A55' },
-            amber: { DEFAULT: '#FFB830', dark: '#CC9020' },
-          },
-          fontFamily: {
-            sans:    ['Inter', 'sans-serif'],
-            heading: ['Space Grotesk', 'sans-serif'],
-          },
-          animation: {
-            'pulse-slow': 'pulse 3s cubic-bezier(0.4,0,0.6,1) infinite',
-            'slide-up':   'slideUp 0.5s ease forwards',
-            'fade-in':    'fadeIn 0.4s ease forwards',
-          },
-          keyframes: {
-            slideUp: { '0%': { opacity: 0, transform: 'translateY(16px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
-            fadeIn:  { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
-          }
-        }
-      }
-    }
-  </script>
   <style>
-    body { background-color: #0A0F1E; }
-    .glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
-    .glass-hover:hover { background: rgba(255,255,255,0.06); }
-    .input-field {
-      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px; padding: 11px 16px; color: white; outline: none; transition: all 0.2s;
-      font-family: 'Inter', sans-serif; font-size: 0.9rem;
+    :root {
+      --bg:      #07111E;
+      --sidebar: #09152A;
+      --card:    #0F1E35;
+      --border:  rgba(255,255,255,0.07);
+      --blue:    #3B82F6;
+      --emerald: #10B981;
+      --purple:  #8B5CF6;
+      --amber:   #F59E0B;
+      --red:     #EF4444;
+      --cyan:    #06B6D4;
+      --text:    #E2E8F0;
+      --muted:   #64748B;
     }
-    .input-field::placeholder { color: rgba(255,255,255,0.25); }
-    .input-field:focus { border-color: #00D4FF; box-shadow: 0 0 0 1px rgba(0,212,255,0.25); }
-    /* Hide all default WTForms labels and wrappers since we are manually rendering */
-    .wtf-hidden label, .wtf-hidden .help-block { display: none !important; }
-    .wtf-hidden input { 
-      background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important;
-      border-radius: 12px !important; padding: 11px 16px !important; color: white !important;
-      width: 100% !important; outline: none !important; transition: all 0.2s !important;
-      font-family: 'Inter', sans-serif !important;
-    }
-    .wtf-hidden input::placeholder { color: rgba(255,255,255,0.25) !important; }
-    .wtf-hidden input:focus { border-color: #00D4FF !important; box-shadow: 0 0 0 1px rgba(0,212,255,0.25) !important; }
-    .card-accent-cyan { border-left: 3px solid #00D4FF; }
-    .card-accent-emerald { border-left: 3px solid #00E5A0; }
-    .card-accent-coral { border-left: 3px solid #FF4D6D; }
-    .card-accent-amber { border-left: 3px solid #FFB830; }
-    ::-webkit-scrollbar { width: 6px; } 
-    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-    @media (max-width: 1024px) { #sidebar { display: none; } }
+    * { box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; }
+    .hfont { font-family:'Space Grotesk',sans-serif; }
+
+    /* Sidebar */
+    .sidebar { background:var(--sidebar); border-right:1px solid var(--border); width:240px; flex-shrink:0; }
+    .nav-item { display:flex; align-items:center; gap:.75rem; padding:.625rem .875rem; border-radius:10px; font-size:.8125rem; font-weight:500; color:#64748B; transition:all .15s; text-decoration:none; }
+    .nav-item:hover { color:#E2E8F0; background:rgba(255,255,255,.04); }
+    .nav-item.active { color:var(--blue); background:rgba(59,130,246,.1); }
+    .nav-item .icon { width:18px; text-align:center; }
+
+    /* Cards */
+    .section-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; margin-bottom:1.25rem; }
+    .section-card.accent-blue    { border-left:3px solid var(--blue); }
+    .section-card.accent-emerald { border-left:3px solid var(--emerald); }
+    .section-card.accent-cyan    { border-left:3px solid var(--cyan); }
+    .section-card.accent-amber   { border-left:3px solid var(--amber); }
+    .section-card.accent-red     { border-left:3px solid var(--red); }
+    .section-card.accent-purple  { border-left:3px solid var(--purple); }
+
+    /* Section header */
+    .sec-header { display:flex; align-items:center; gap:.875rem; margin-bottom:1.25rem; }
+    .sec-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .sec-title { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1rem; color:#F1F5F9; }
+    .sec-sub { font-size:.75rem; color:var(--muted); margin-top:.125rem; }
+
+    /* Form */
+    .field-label { font-size:.8rem; font-weight:500; color:#94A3B8; display:block; margin-bottom:.375rem; }
+    .input-field { width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:9px; padding:10px 14px; color:var(--text); outline:none; transition:all .2s; font-size:.875rem; font-family:'Inter',sans-serif; }
+    .input-field::placeholder { color:rgba(255,255,255,.2); }
+    .input-field:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+
+    /* Buttons */
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.625rem 1.25rem; border-radius:9px; font-size:.8125rem; font-weight:600; font-family:'Space Grotesk',sans-serif; transition:all .18s; cursor:pointer; border:none; }
+    .btn-blue   { background:var(--blue);    color:#fff; }
+    .btn-blue:hover   { background:#2563EB; }
+    .btn-green  { background:var(--emerald); color:#fff; }
+    .btn-green:hover  { background:#059669; }
+    .btn-cyan   { background:var(--cyan);    color:#fff; }
+    .btn-cyan:hover   { background:#0891B2; }
+    .btn-red    { background:rgba(239,68,68,.1); color:var(--red); border:1px solid rgba(239,68,68,.25); }
+    .btn-red:hover    { background:rgba(239,68,68,.2); }
+    .btn-amber  { background:var(--amber);   color:#0A0F1E; }
+    .btn-amber:hover  { background:#D97706; }
+    .btn-purple { background:linear-gradient(135deg,var(--purple),#7C3AED); color:#fff; }
+    .btn-purple:hover { opacity:.9; }
+    .btn-ghost  { background:rgba(255,255,255,.04); color:var(--text); border:1px solid var(--border); }
+    .btn-ghost:hover  { background:rgba(255,255,255,.07); }
+    .btn-full { width:100%; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* Result panel */
+    .result-panel { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.25rem; }
+    .result-row { background:rgba(255,255,255,.025); border:1px solid var(--border); border-radius:9px; padding:.75rem 1rem; margin-bottom:.625rem; }
+    .result-label { font-size:.7rem; color:var(--muted); margin-bottom:.25rem; text-transform:uppercase; letter-spacing:.05em; }
+    .result-val { font-size:.8rem; color:var(--text); word-break:break-all; }
+
+    /* Badges */
+    .badge-green  { display:inline-flex; align-items:center; gap:.35rem; font-size:.7rem; padding:.25rem .625rem; border-radius:100px; background:rgba(16,185,129,.1);  color:var(--emerald); border:1px solid rgba(16,185,129,.2);  }
+    .badge-blue   { display:inline-flex; align-items:center; gap:.35rem; font-size:.7rem; padding:.25rem .625rem; border-radius:100px; background:rgba(59,130,246,.1);  color:var(--blue);    border:1px solid rgba(59,130,246,.2);  }
+    .badge-amber  { display:inline-flex; align-items:center; gap:.35rem; font-size:.7rem; padding:.25rem .625rem; border-radius:100px; background:rgba(245,158,11,.1); color:var(--amber);   border:1px solid rgba(245,158,11,.2); }
+    .badge-purple { display:inline-flex; align-items:center; gap:.35rem; font-size:.7rem; padding:.25rem .625rem; border-radius:100px; background:rgba(139,92,246,.1); color:var(--purple);  border:1px solid rgba(139,92,246,.2); }
+    .dot-pulse { width:6px; height:6px; border-radius:50%; animation:dotpulse 2s infinite; }
+    @keyframes dotpulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    ::-webkit-scrollbar { width:5px; }
+    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.07); border-radius:3px; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .anim { animation:slideUp .4s ease forwards; }
   </style>
 </head>
-<body class="bg-navy text-white font-sans min-h-screen antialiased flex">
+<body class="flex min-h-screen antialiased">
 
   <!-- SIDEBAR -->
-  <aside id="sidebar" class="hidden lg:flex flex-col w-64 shrink-0 border-r border-white/5 sticky top-0 h-screen overflow-y-auto" style="background:#080D1A">
+  <aside class="sidebar hidden lg:flex flex-col sticky top-0 h-screen overflow-y-auto">
     <!-- Logo -->
-    <div class="px-6 py-5 border-b border-white/5">
-      <a href="/" class="flex items-center gap-2 font-heading font-bold text-lg">
-        <i class="fa-solid fa-cube" style="color:#00D4FF"></i>
-        <span style="background: linear-gradient(135deg, #00D4FF, #00E5A0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">EHR Chain</span>
+    <div class="px-5 py-5" style="border-bottom:1px solid var(--border)">
+      <a href="/" class="flex items-center gap-2 hfont font-bold text-base">
+        <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:var(--blue)">
+          <i class="fa-solid fa-heart-pulse text-white text-xs"></i>
+        </div>
+        <span class="text-white">EHR<span style="color:var(--blue)">Chain</span></span>
       </a>
     </div>
 
     <!-- Patient identity -->
-    <div class="px-6 py-6 border-b border-white/5">
-      <div class="w-12 h-12 rounded-2xl flex items-center justify-center font-heading font-bold text-navy mb-3" style="background:#00D4FF; font-size:1.2rem">P</div>
-      <p class="font-semibold text-white text-sm mb-1">Patient</p>
-      <p class="text-white/40 text-xs font-mono break-all">{{ username[:20] if username else '—' }}…</p>
+    <div class="px-5 py-5" style="border-bottom:1px solid var(--border)">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center hfont font-bold text-white mb-2.5 text-sm" style="background:var(--emerald)">P</div>
+      <p class="font-semibold text-white text-sm">Patient</p>
+      <p class="text-xs mt-0.5 font-mono break-all" style="color:var(--muted)">{{ username[:22] if username else '—' }}…</p>
     </div>
 
     <!-- Nav -->
-    <nav class="flex-1 px-3 py-4 space-y-1">
-      <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all glass-hover" style="color:#00D4FF; background:rgba(0,212,255,0.08)">
-        <i class="fa-solid fa-house w-4"></i> Dashboard
-      </a>
-      <a href="#section-visit" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/60 font-medium transition-all glass-hover hover:text-white">
-        <i class="fa-solid fa-calendar-plus w-4"></i> New Visit
-      </a>
-      <a href="#section-doctors" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/60 font-medium transition-all glass-hover hover:text-white">
-        <i class="fa-solid fa-user-doctor w-4"></i> Manage Doctors
-      </a>
-      <a href="#section-records" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/60 font-medium transition-all glass-hover hover:text-white">
-        <i class="fa-solid fa-file-medical w-4"></i> My Records
-      </a>
+    <nav class="flex-1 px-3 py-4 space-y-0.5">
+      <a href="#" class="nav-item active"><span class="icon"><i class="fa-solid fa-gauge-high"></i></span> Dashboard</a>
+      <a href="#section-visit" class="nav-item"><span class="icon"><i class="fa-solid fa-calendar-plus"></i></span> New Visit</a>
+      <a href="#section-doctors" class="nav-item"><span class="icon"><i class="fa-solid fa-user-doctor"></i></span> Manage Doctors</a>
+      <a href="#section-records" class="nav-item"><span class="icon"><i class="fa-solid fa-file-medical"></i></span> My Records</a>
+      <a href="#section-ai" class="nav-item"><span class="icon"><i class="fa-solid fa-heart-pulse"></i></span> AI Risk Check</a>
     </nav>
 
-    <!-- Logout -->
-    <div class="px-3 pb-6">
-      <a href="/" aria-label="Log Out" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/40 font-medium transition-all hover:text-white hover:bg-white/5">
-        <i class="fa-solid fa-right-from-bracket w-4"></i> Log Out
-      </a>
+    <div class="px-3 pb-5">
+      <a href="/" class="nav-item"><span class="icon"><i class="fa-solid fa-right-from-bracket"></i></span> Log Out</a>
     </div>
   </aside>
 
@@ -115,175 +133,162 @@
   <div class="flex-1 flex flex-col min-h-screen overflow-x-hidden">
 
     <!-- Top bar -->
-    <header class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+    <header class="flex items-center justify-between px-6 py-4 sticky top-0 z-20" style="background:rgba(7,17,30,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)">
       <div>
-        <h2 class="font-heading font-bold text-xl">Patient Dashboard</h2>
-        <p class="text-white/40 text-xs mt-0.5 font-mono">{{ username }}</p>
+        <h1 class="hfont font-bold text-lg text-white">Patient Dashboard</h1>
+        <p class="text-xs mt-0.5 font-mono" style="color:var(--muted)">{{ username }}</p>
       </div>
       <div class="flex items-center gap-3">
-        <span class="hidden sm:flex items-center gap-2 text-xs" style="color:#00E5A0">
-          <span class="w-2 h-2 rounded-full animate-pulse-slow" style="background:#00E5A0"></span>
-          Contract: {{ contract_address[:12] if contract_address else '—' }}…
+        <span class="badge-green hidden sm:inline-flex">
+          <span class="dot-pulse" style="background:var(--emerald)"></span>
+          {{ contract_address[:12] if contract_address else '—' }}…
         </span>
-        <a href="/" aria-label="Log Out" class="px-3 py-1.5 text-sm rounded-xl glass glass-hover transition-all text-white/60 hover:text-white">
-          <i class="fa-solid fa-right-from-bracket mr-1"></i> Log Out
+        <a href="/" class="btn btn-ghost py-2 px-3" style="font-size:.8rem">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
         </a>
       </div>
     </header>
 
-    <!-- Dashboard Body -->
+    <!-- Body -->
     <div class="flex flex-1 overflow-y-auto">
 
-      <!-- Forms Column -->
-      <div class="flex-1 p-6 space-y-6 max-w-2xl">
+      <!-- Forms column -->
+      <div class="flex-1 p-6 max-w-2xl">
 
-        <!-- ── SECTION A: Start Visit ── -->
-        <section id="section-visit" class="glass rounded-2xl p-6 card-accent-emerald animate-slide-up">
+        <!-- SECTION A: Start Visit -->
+        <section id="section-visit" class="section-card accent-emerald anim">
           <div class="flex items-start justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(0,229,160,0.12)">
-                <i class="fa-solid fa-calendar-plus" style="color:#00E5A0"></i>
-              </div>
+            <div class="sec-header" style="margin-bottom:0">
+              <div class="sec-icon" style="background:rgba(16,185,129,.12)"><i class="fa-solid fa-calendar-plus" style="color:var(--emerald)"></i></div>
               <div>
-                <h3 class="font-heading font-semibold text-white">Start New Visit</h3>
-                <p class="text-white/40 text-xs">Creates a new on-chain medical record</p>
+                <p class="sec-title">Start New Visit</p>
+                <p class="sec-sub">Creates a new on-chain medical record</p>
               </div>
             </div>
-            <span class="inline-flex items-center gap-1.5 text-xs font-medium" style="color:#00E5A0">
-              <span class="w-1.5 h-1.5 rounded-full animate-pulse-slow" style="background:#00E5A0"></span>
-              On-chain
-            </span>
+            <span class="badge-green shrink-0"><span class="dot-pulse" style="background:var(--emerald)"></span>On-chain</span>
           </div>
-          <!-- Form — Jinja2 preserved -->
           <form action="" method="post" role="form">
             {{ form.csrf_token() }}
             <div class="space-y-3">
               <div>
-                <label for="start_visit" class="block text-sm text-white/50 mb-2">Appointment Date & Time</label>
-                {{ form.start_visit(id="start_visit", class="input-field", placeholder="MM/DD/YYYY hh:mm", **{"aria-label": "Appointment Date and Time"}) }}
+                <label for="start_visit" class="field-label">Appointment Date &amp; Time</label>
+                {{ form.start_visit(id="start_visit", class="input-field", placeholder="MM/DD/YYYY hh:mm", **{"aria-label":"Appointment Date and Time"}) }}
               </div>
-              <button type="submit" name="action1" value="VALUE1" aria-label="Start Visit" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-heading font-semibold text-navy text-sm transition-all duration-200 hover:opacity-90 active:scale-95" style="background:#00E5A0">
+              <button type="submit" name="action1" value="VALUE1" class="btn btn-green" aria-label="Start Visit">
                 <i class="fa-solid fa-play"></i> Start Visit
               </button>
             </div>
           </form>
         </section>
 
-        <!-- ── SECTION B: Add Doctor ── -->
-        <section id="section-doctors" class="glass rounded-2xl p-6 card-accent-cyan animate-slide-up" style="animation-delay:0.05s">
+        <!-- SECTION B: Grant Doctor Access -->
+        <section id="section-doctors" class="section-card accent-blue anim" style="animation-delay:.04s">
           <div class="flex items-start justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(0,212,255,0.12)">
-                <i class="fa-solid fa-user-plus" style="color:#00D4FF"></i>
-              </div>
+            <div class="sec-header" style="margin-bottom:0">
+              <div class="sec-icon" style="background:rgba(59,130,246,.12)"><i class="fa-solid fa-user-plus" style="color:var(--blue)"></i></div>
               <div>
-                <h3 class="font-heading font-semibold text-white">Grant Doctor Access</h3>
-                <p class="text-white/40 text-xs">Updates smart contract permissions</p>
+                <p class="sec-title">Grant Doctor Access</p>
+                <p class="sec-sub">Updates smart contract permissions</p>
               </div>
             </div>
-            <span class="inline-flex items-center gap-1.5 text-xs font-medium" style="color:#00D4FF">
-              <span class="w-1.5 h-1.5 rounded-full animate-pulse-slow" style="background:#00D4FF"></span>
-              On-chain
-            </span>
+            <span class="badge-blue shrink-0"><span class="dot-pulse" style="background:var(--blue)"></span>On-chain</span>
           </div>
           <form action="" method="post" role="form">
             {{ form.csrf_token() }}
             <div class="space-y-3">
               <div>
-                <label for="add_doctors" class="block text-sm text-white/50 mb-2">Doctor's Blockchain Address</label>
-                {{ form.add_doctors(id="add_doctors", class="input-field", placeholder="0x... Doctor's address", **{"aria-label": "Doctor Address to Add"}) }}
+                <label for="add_doctors" class="field-label">Doctor's Blockchain Address</label>
+                {{ form.add_doctors(id="add_doctors", class="input-field", placeholder="0x... doctor's wallet address", **{"aria-label":"Doctor Address to Add"}) }}
               </div>
-              <button type="submit" name="action2" value="VALUE2" aria-label="Add Doctor" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-heading font-semibold text-navy text-sm transition-all duration-200 hover:opacity-90 active:scale-95" style="background:#00D4FF">
+              <button type="submit" name="action2" value="VALUE2" class="btn btn-blue" aria-label="Grant Doctor Access">
                 <i class="fa-solid fa-user-plus"></i> Grant Access
               </button>
             </div>
           </form>
         </section>
 
-        <!-- ── SECTION C: Remove Doctor ── -->
-        <section class="glass rounded-2xl p-6 card-accent-coral animate-slide-up" style="animation-delay:0.1s">
-          <div class="flex items-start justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(255,77,109,0.12)">
-                <i class="fa-solid fa-user-minus" style="color:#FF4D6D"></i>
-              </div>
-              <div>
-                <h3 class="font-heading font-semibold text-white">Revoke Doctor Access</h3>
-                <p class="text-white/40 text-xs">Removes doctor from authorized list</p>
-              </div>
+        <!-- SECTION C: Revoke Doctor Access -->
+        <section class="section-card accent-red anim" style="animation-delay:.06s">
+          <div class="sec-header">
+            <div class="sec-icon" style="background:rgba(239,68,68,.1)"><i class="fa-solid fa-user-minus" style="color:var(--red)"></i></div>
+            <div>
+              <p class="sec-title">Revoke Doctor Access</p>
+              <p class="sec-sub">Removes doctor from authorized list</p>
             </div>
           </div>
-          <div class="flex items-start gap-2 p-3 rounded-xl mb-4 text-xs" style="background:rgba(255,77,109,0.07); border:1px solid rgba(255,77,109,0.2); color:rgba(255,77,109,0.9)">
-            <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0"></i>
+          <div class="flex items-start gap-2.5 p-3 rounded-xl mb-4 text-xs" style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18);color:#FCA5A5">
+            <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0" style="color:var(--red)"></i>
             This will permanently block the doctor from reading your records.
           </div>
           <form action="" method="post" role="form">
             {{ form.csrf_token() }}
             <div class="space-y-3">
               <div>
-                <label for="remove_doctors" class="block text-sm text-white/50 mb-2">Doctor's Blockchain Address</label>
-                {{ form.remove_doctors(id="remove_doctors", class="input-field", placeholder="0x... Doctor's address to revoke", **{"aria-label": "Doctor Address to Remove"}) }}
+                <label for="remove_doctors" class="field-label">Doctor's Blockchain Address</label>
+                {{ form.remove_doctors(id="remove_doctors", class="input-field", placeholder="0x... address to revoke", **{"aria-label":"Doctor Address to Remove"}) }}
               </div>
-              <button type="submit" name="action3" value="VALUE3" aria-label="Remove Doctor" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-heading font-semibold text-sm transition-all duration-200 active:scale-95" style="background:rgba(255,77,109,0.12); border:1px solid rgba(255,77,109,0.3); color:#FF4D6D">
+              <button type="submit" name="action3" value="VALUE3" class="btn btn-red" aria-label="Revoke Doctor Access">
                 <i class="fa-solid fa-user-minus"></i> Revoke Access
               </button>
             </div>
           </form>
         </section>
 
-        <!-- ── SECTION: Add / Remove Audit ── -->
-        <section class="glass rounded-2xl p-6 card-accent-amber animate-slide-up" style="animation-delay:0.15s">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(255,184,48,0.12)">
-              <i class="fa-solid fa-magnifying-glass-chart" style="color:#FFB830"></i>
-            </div>
+        <!-- SECTION D: Manage Auditors -->
+        <section class="section-card accent-amber anim" style="animation-delay:.08s">
+          <div class="sec-header">
+            <div class="sec-icon" style="background:rgba(245,158,11,.12)"><i class="fa-solid fa-magnifying-glass-chart" style="color:var(--amber)"></i></div>
             <div>
-              <h3 class="font-heading font-semibold text-white">Manage Auditors</h3>
-              <p class="text-white/40 text-xs">Add or remove third-party auditors</p>
+              <p class="sec-title">Manage Auditors</p>
+              <p class="sec-sub">Add or remove third-party auditors</p>
             </div>
           </div>
           <div class="grid sm:grid-cols-2 gap-4">
             <form action="" method="post" role="form">
               {{ form.csrf_token() }}
               <div class="space-y-3">
-                <label for="add_audits" class="block text-sm text-white/50">Add Auditor</label>
-                {{ form.add_audits(id="add_audits", class="input-field", placeholder="Audit ID", **{"aria-label": "Audit ID to Add"}) }}
-                <button type="submit" name="action4" value="VALUE4" aria-label="Add Audit" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-heading font-semibold text-sm text-navy transition-all duration-200 hover:opacity-90 active:scale-95" style="background:#FFB830">
-                  <i class="fa-solid fa-plus"></i> Add Audit
+                <div>
+                  <label for="add_audits" class="field-label">Add Auditor ID</label>
+                  {{ form.add_audits(id="add_audits", class="input-field", placeholder="Audit ID", **{"aria-label":"Audit ID to Add"}) }}
+                </div>
+                <button type="submit" name="action4" value="VALUE4" class="btn btn-amber btn-full" aria-label="Add Auditor">
+                  <i class="fa-solid fa-plus"></i> Add Auditor
                 </button>
               </div>
             </form>
             <form action="" method="post" role="form">
               {{ form.csrf_token() }}
               <div class="space-y-3">
-                <label for="remove_audits" class="block text-sm text-white/50">Remove Auditor</label>
-                {{ form.remove_audits(id="remove_audits", class="input-field", placeholder="Audit ID", **{"aria-label": "Audit ID to Remove"}) }}
-                <button type="submit" name="action5" value="VALUE5" aria-label="Remove Audit" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-heading font-semibold text-sm transition-all duration-200 active:scale-95" style="background:rgba(255,184,48,0.1); border:1px solid rgba(255,184,48,0.3); color:#FFB830">
-                  <i class="fa-solid fa-minus"></i> Remove Audit
+                <div>
+                  <label for="remove_audits" class="field-label">Remove Auditor ID</label>
+                  {{ form.remove_audits(id="remove_audits", class="input-field", placeholder="Audit ID", **{"aria-label":"Audit ID to Remove"}) }}
+                </div>
+                <button type="submit" name="action5" value="VALUE5" class="btn btn-ghost btn-full" style="color:var(--amber);border-color:rgba(245,158,11,.25)" aria-label="Remove Auditor">
+                  <i class="fa-solid fa-minus"></i> Remove Auditor
                 </button>
               </div>
             </form>
           </div>
         </section>
 
-        <!-- ── SECTION: Records ── -->
-        <section id="section-records" class="glass rounded-2xl p-6 animate-slide-up" style="animation-delay:0.2s">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(148,163,184,0.1)">
-              <i class="fa-solid fa-file-medical text-white/60"></i>
-            </div>
+        <!-- SECTION E: My Records -->
+        <section id="section-records" class="section-card anim" style="animation-delay:.10s">
+          <div class="sec-header">
+            <div class="sec-icon" style="background:rgba(255,255,255,.06)"><i class="fa-solid fa-file-medical" style="color:#94A3B8"></i></div>
             <div>
-              <h3 class="font-heading font-semibold text-white">My Medical Records</h3>
-              <p class="text-white/40 text-xs">Print or delete a specific record</p>
+              <p class="sec-title">My Medical Records</p>
+              <p class="sec-sub">Print or delete a specific record</p>
             </div>
           </div>
           <div class="grid sm:grid-cols-2 gap-4">
             <form action="" method="post" role="form">
               {{ form.csrf_token() }}
               <div class="space-y-3">
-                <label for="print_record" class="block text-sm text-white/50">Print Record</label>
-                {{ form.print_record(id="print_record", class="input-field", placeholder="Record ID", **{"aria-label": "Record ID to Print"}) }}
-                <button type="submit" name="action6" value="VALUE6" aria-label="Print Medical Record" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-heading font-semibold text-sm text-navy transition-all duration-200 hover:opacity-90 active:scale-95" style="background:rgba(255,255,255,0.85); color:#0A0F1E">
+                <div>
+                  <label for="print_record" class="field-label">Print Record</label>
+                  {{ form.print_record(id="print_record", class="input-field", placeholder="0x... record ID", **{"aria-label":"Record ID to Print"}) }}
+                </div>
+                <button type="submit" name="action6" value="VALUE6" class="btn btn-ghost btn-full" aria-label="Print Medical Record">
                   <i class="fa-solid fa-print"></i> Print Record
                 </button>
               </div>
@@ -291,9 +296,11 @@
             <form action="" method="post" role="form">
               {{ form.csrf_token() }}
               <div class="space-y-3">
-                <label for="delete_record" class="block text-sm text-white/50">Delete Record</label>
-                {{ form.delete_record(id="delete_record", class="input-field", placeholder="Record ID", **{"aria-label": "Record ID to Delete"}) }}
-                <button type="submit" name="action7" value="VALUE7" aria-label="Delete Medical Record" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-heading font-semibold text-sm transition-all duration-200 active:scale-95" style="background:rgba(255,77,109,0.1); border:1px solid rgba(255,77,109,0.3); color:#FF4D6D">
+                <div>
+                  <label for="delete_record" class="field-label">Delete Record</label>
+                  {{ form.delete_record(id="delete_record", class="input-field", placeholder="0x... record ID", **{"aria-label":"Record ID to Delete"}) }}
+                </div>
+                <button type="submit" name="action7" value="VALUE7" class="btn btn-red btn-full" aria-label="Delete Medical Record">
                   <i class="fa-solid fa-trash"></i> Delete Record
                 </button>
               </div>
@@ -301,141 +308,200 @@
           </div>
         </section>
 
-      </div>
+        <!-- SECTION F: AI Risk Assessment -->
+        <section id="section-ai" class="section-card accent-purple anim" style="animation-delay:.12s">
+          <div class="flex items-start justify-between mb-4">
+            <div class="sec-header" style="margin-bottom:0">
+              <div class="sec-icon" style="background:rgba(139,92,246,.14)"><i class="fa-solid fa-heart-pulse" style="color:var(--purple)"></i></div>
+              <div>
+                <p class="sec-title">AI Disease Risk Assessment</p>
+                <p class="sec-sub">Powered by Federated Learning — your data stays private</p>
+              </div>
+            </div>
+            <span class="badge-purple shrink-0"><span class="dot-pulse" style="background:var(--purple)"></span>FL Model</span>
+          </div>
 
-      <!-- Results / Side Panel — Jinja2 preserved -->
-      <div class="w-96 shrink-0 p-6">
-        {% if isCard == True %}
-        {% block content1 %}
-        <div class="glass rounded-2xl p-5 sticky top-6 animate-fade-in">
-          <div class="flex items-center gap-2 mb-4">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(0,229,160,0.12)">
-              <i class="fa-solid fa-bolt text-sm" style="color:#00E5A0"></i>
+          <!-- Model availability banner -->
+          <div id="ai-model-check" class="flex items-center gap-2.5 p-3 rounded-xl mb-4 text-xs" style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);color:var(--amber)">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Checking model availability…
+          </div>
+
+          <!-- Vitals grid -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="field-label">Age (years)</label>
+              <input type="number" id="ai-age" class="input-field" value="45" min="18" max="95" step="1" aria-label="Age">
             </div>
             <div>
-              <p class="text-xs text-white/40">Transaction Result</p>
-              <p class="font-heading font-semibold text-sm text-white">{{ result }}</p>
+              <label class="field-label">Systolic BP (mmHg)</label>
+              <input type="number" id="ai-sbp" class="input-field" value="120" min="80" max="200" step="1" aria-label="Systolic Blood Pressure">
+            </div>
+            <div>
+              <label class="field-label">Diastolic BP (mmHg)</label>
+              <input type="number" id="ai-dbp" class="input-field" value="80" min="50" max="130" step="1" aria-label="Diastolic Blood Pressure">
+            </div>
+            <div>
+              <label class="field-label">Heart Rate (bpm)</label>
+              <input type="number" id="ai-hr" class="input-field" value="72" min="45" max="150" step="1" aria-label="Heart Rate">
+            </div>
+            <div>
+              <label class="field-label">Glucose (mg/dL)</label>
+              <input type="number" id="ai-glucose" class="input-field" value="95" min="60" max="300" step="1" aria-label="Blood Glucose Level">
+            </div>
+            <div>
+              <label class="field-label">BMI (kg/m²)</label>
+              <input type="number" id="ai-bmi" class="input-field" value="24" min="15" max="50" step="0.1" aria-label="BMI">
+            </div>
+            <div>
+              <label class="field-label">Cholesterol (mg/dL)</label>
+              <input type="number" id="ai-chol" class="input-field" value="185" min="100" max="350" step="1" aria-label="Cholesterol">
+            </div>
+            <div>
+              <label class="field-label">O₂ Saturation (%)</label>
+              <input type="number" id="ai-o2" class="input-field" value="98" min="85" max="100" step="0.1" aria-label="Oxygen Saturation">
             </div>
           </div>
-          <div class="space-y-3">
+
+          <button type="button" onclick="runAIPredict()" id="ai-predict-btn" class="btn btn-purple btn-full mt-4">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Assess Disease Risk
+          </button>
+
+          <div id="ai-result" class="hidden mt-4"></div>
+        </section>
+
+      </div><!-- end forms column -->
+
+      <!-- RESULTS SIDE PANEL -->
+      <div class="w-88 shrink-0 p-6" style="width:360px">
+
+        {% if isCard == True %}
+        {% block content1 %}
+        <div class="result-panel sticky top-20 anim" style="border-color:rgba(16,185,129,.2)">
+          <div class="flex items-center gap-2.5 mb-4 pb-4" style="border-bottom:1px solid var(--border)">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:rgba(16,185,129,.12)">
+              <i class="fa-solid fa-bolt text-sm" style="color:var(--emerald)"></i>
+            </div>
+            <div>
+              <p class="text-xs" style="color:var(--muted)">Transaction Result</p>
+              <p class="hfont font-semibold text-sm text-white">{{ result }}</p>
+            </div>
+          </div>
+
+          <div class="space-y-2.5">
+
             {% if isStart == True %}
-            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
-              <p class="text-xs text-white/40 mb-1">Appointment Date</p>
-              <p class="text-sm text-white font-mono">{{ date }}</p>
+            <div class="result-row">
+              <p class="result-label">Appointment Date</p>
+              <p class="result-val font-mono">{{ date }}</p>
             </div>
             {% endif %}
-            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
-              <p class="text-xs text-white/40 mb-1">Transaction Hash</p>
-              <p class="text-xs text-white font-mono break-all">{{ tx_hash[:40] }}...</p>
+
+            <div class="result-row">
+              <p class="result-label">Transaction Hash</p>
+              <p class="result-val font-mono">{{ tx_hash[:40] }}…</p>
             </div>
+
             {% if event_logs[0]['args']['record_unique_id'] %}
-            <div class="p-3 rounded-xl" style="background:rgba(0,212,255,0.06); border:1px solid rgba(0,212,255,0.2)">
-              <p class="text-xs mb-1" style="color:rgba(0,212,255,0.7)">Unique Record ID</p>
-              <p class="text-xs text-white font-mono break-all" id="record-id-text">{{ event_logs[0]['args']['record_unique_id'] }}</p>
-              <button onclick="copyText(document.getElementById('record-id-text').textContent.trim())" class="mt-2 text-xs px-3 py-1 rounded-lg transition-all hover:opacity-80" style="background:rgba(0,212,255,0.1); color:#00D4FF; border:1px solid rgba(0,212,255,0.2)">
-                <i class="fa-solid fa-copy mr-1"></i>Copy ID
+            <div class="result-row" style="border-color:rgba(59,130,246,.2);background:rgba(59,130,246,.04)">
+              <p class="result-label" style="color:rgba(147,197,253,.7)">Unique Record ID</p>
+              <p class="result-val font-mono" id="record-id-text">{{ event_logs[0]['args']['record_unique_id'] }}</p>
+              <button onclick="copyText(document.getElementById('record-id-text').textContent.trim())" class="btn btn-ghost mt-2 py-1 px-2.5" style="font-size:.7rem;min-width:0;color:var(--blue);border-color:rgba(59,130,246,.2)">
+                <i class="fa-solid fa-copy"></i> Copy ID
               </button>
             </div>
-            <div class="p-3 rounded-xl text-center" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
-              <p class="text-xs text-white/40 mb-2">Show to your doctor:</p>
-              <img src={{qr_code}} alt="QR Code for Record" class="mx-auto rounded-lg" style="max-width:140px" />
+            <div class="result-row text-center" style="padding:.75rem">
+              <p class="result-label mb-2">Show to your doctor</p>
+              <img src={{qr_code}} alt="QR Code for Record" class="mx-auto rounded-lg" style="max-width:130px"/>
             </div>
             {% endif %}
+
             {% if event_logs[0]['args']['record_msg'] %}
-            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
-              <p class="text-xs text-white/40 mb-1">Record Message</p>
-              <p class="text-xs text-white">{{ event_logs[0]['args']['record_msg'] }}</p>
+            <div class="result-row">
+              <p class="result-label">Record Message</p>
+              <p class="result-val">{{ event_logs[0]['args']['record_msg'] }}</p>
             </div>
-            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
-              <p class="text-xs text-white/40 mb-1">Status</p>
-              <p class="text-xs text-white">{{ event_logs[0]['args']['record_status'] }} <span class="text-white/30">(0=Created, 1=Deleted, 2=Changed, 3=Queried, 4=Printed, 5=Copied)</span></p>
+            <div class="result-row">
+              <p class="result-label">Status Code</p>
+              <p class="result-val">{{ event_logs[0]['args']['record_status'] }} <span style="color:var(--muted)">(0=Created 1=Deleted 2=Changed 3=Queried 4=Printed 5=Copied)</span></p>
             </div>
             {% endif %}
+
             {% if event_logs[0]['args']['return_msg'] %}
-            <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06)">
-              <p class="text-xs text-white/40 mb-1">Event Log</p>
-              <p class="text-xs text-white">{{ event_logs[0]['args']['return_msg'] }}</p>
-              <p class="text-xs text-white/50 font-mono mt-1 break-all">{{ event_logs[0]['args']['doctor_address'] }}</p>
-              <p class="text-xs text-white/30 mt-1">Epoch: {{ event_logs[0]['args']['record_time'] }}</p>
+            <div class="result-row">
+              <p class="result-label">Event Log</p>
+              <p class="result-val">{{ event_logs[0]['args']['return_msg'] }}</p>
+              <p class="result-val font-mono mt-1" style="font-size:.75rem;color:var(--muted)">{{ event_logs[0]['args']['doctor_address'] }}</p>
+              <p class="result-val mt-1" style="font-size:.75rem;color:var(--muted)">Epoch: {{ event_logs[0]['args']['record_time'] }}</p>
             </div>
             {% endif %}
+
             {% if record_details %}
-            <!-- IPFS-aware record details block -->
-            <div class="p-3 rounded-xl" style="background:rgba(0,229,160,0.05); border:1px solid rgba(0,229,160,0.2)">
+            <div class="result-row" style="border-color:rgba(16,185,129,.2);background:rgba(16,185,129,.03)">
               <div class="flex items-center justify-between mb-2">
-                <p class="text-xs font-semibold" style="color:#00E5A0"><i class="fa-solid fa-file-medical mr-1"></i>Medical Record Details</p>
+                <p class="result-label" style="color:rgba(52,211,153,.8)"><i class="fa-solid fa-file-medical mr-1"></i>Medical Record</p>
                 {% if ipfs_cid %}
-                <span class="text-xs px-2 py-0.5 rounded-full font-semibold" style="background:rgba(0,229,160,0.15);color:#00E5A0;border:1px solid rgba(0,229,160,0.3)">
-                  <i class="fa-solid fa-circle-check mr-1"></i>IPFS
-                </span>
+                <span class="badge-green" style="font-size:.65rem">IPFS</span>
                 {% else %}
-                <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4)">On-chain</span>
+                <span class="badge-blue" style="font-size:.65rem">On-chain</span>
                 {% endif %}
               </div>
-              
-              {% if is_binary or (ipfs_cid and record_details|length > 200) %}
-              <div class="flex flex-col items-center py-6 text-center bg-white/5 rounded-2xl border border-white/10 my-2">
-                {% if record_details and record_details|length < 500 %}
-                <div class="mb-6 px-4 w-full">
-                    <p class="text-xs text-white/40 uppercase tracking-widest mb-2 font-bold">Clinical Notes</p>
-                    <p class="text-sm text-white leading-relaxed">{{ record_details }}</p>
-                    <div class="h-px w-12 bg-white/10 mx-auto mt-4"></div>
-                </div>
-                {% endif %}
 
-                <div class="w-16 h-16 rounded-3xl flex items-center justify-center mb-4 shadow-2xl" style="background:rgba(0,229,160,0.15);color:#00E5A0;border:1px solid rgba(0,229,160,0.3)">
-                    <i class="fa-solid fa-file-medical fa-2x"></i>
+              {% if is_binary or (ipfs_cid and record_details|length > 200) %}
+              <div class="flex flex-col items-center py-5 text-center rounded-xl" style="background:rgba(255,255,255,.02);border:1px solid var(--border)">
+                {% if record_details and record_details|length < 500 %}
+                <p class="text-xs mb-4 px-3 text-white leading-relaxed">{{ record_details }}</p>
+                {% endif %}
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style="background:rgba(16,185,129,.12)">
+                  <i class="fa-solid fa-file-medical text-xl" style="color:var(--emerald)"></i>
                 </div>
-                <h4 class="text-sm font-bold text-white mb-1">File Attachment</h4>
-                <p class="text-xs text-white/50 mb-6 px-4">This record contains a protected file stored on IPFS.</p>
-                <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" class="px-8 py-3 rounded-2xl text-sm font-black transition-all hover:scale-105 active:scale-95 shadow-xl shadow-emerald-500/30" style="background:#00E5A0;color:#000">
-                    <i class="fa-solid fa-eye mr-2"></i>View & Download Record
+                <p class="text-sm font-semibold text-white mb-1">File Attachment</p>
+                <p class="text-xs mb-4" style="color:var(--muted)">Protected file stored on IPFS</p>
+                <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" class="btn btn-green py-2 px-4" style="font-size:.8rem">
+                  <i class="fa-solid fa-eye"></i> View &amp; Download
                 </a>
               </div>
               {% else %}
-              <p class="text-sm text-white leading-relaxed whitespace-pre-wrap p-2">{{ record_details }}</p>
+              <p class="text-sm text-white leading-relaxed whitespace-pre-wrap">{{ record_details }}</p>
               {% endif %}
             </div>
+
             {% if ipfs_cid %}
-            <div class="p-3 rounded-xl space-y-2" style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.2)">
-              <p class="text-xs font-semibold" style="color:#8B5CF6"><i class="fa-solid fa-cubes mr-1"></i>IPFS Storage Info</p>
-              <div>
-                <p class="text-xs text-white/40 mb-1">Content ID (CID)</p>
-                <p class="text-xs font-mono text-white break-all" id="patient-ipfs-cid">{{ ipfs_cid }}</p>
-                <button onclick="copyText(document.getElementById('patient-ipfs-cid').textContent.trim())" class="mt-1.5 text-xs px-3 py-1 rounded-lg" style="background:rgba(139,92,246,0.1);color:#8B5CF6;border:1px solid rgba(139,92,246,0.2)">
-                  <i class="fa-solid fa-copy mr-1"></i>Copy CID
+            <div class="result-row" style="border-color:rgba(139,92,246,.2);background:rgba(139,92,246,.03)">
+              <p class="result-label" style="color:rgba(196,181,253,.7)"><i class="fa-solid fa-cubes mr-1"></i>IPFS Storage</p>
+              <p class="result-val font-mono" id="patient-ipfs-cid">{{ ipfs_cid }}</p>
+              <div class="flex items-center gap-2 mt-2">
+                <button onclick="copyText(document.getElementById('patient-ipfs-cid').textContent.trim())" class="btn btn-ghost py-1 px-2.5" style="font-size:.7rem;min-width:0;color:var(--purple);border-color:rgba(139,92,246,.25)">
+                  <i class="fa-solid fa-copy"></i> Copy CID
                 </button>
-              </div>
-              <div class="flex items-center gap-2">
-                <p class="text-xs text-white/40">Source:</p>
                 {% if ipfs_source == 'local' %}
-                <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(0,229,160,0.12);color:#00E5A0"><i class="fa-solid fa-server mr-1"></i>Local Node</span>
+                <span class="badge-green" style="font-size:.65rem"><i class="fa-solid fa-server"></i> Local</span>
                 {% elif ipfs_source == 'gateway' %}
-                <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(0,212,255,0.12);color:#00D4FF"><i class="fa-solid fa-globe mr-1"></i>Public Gateway</span>
+                <span class="badge-blue" style="font-size:.65rem"><i class="fa-solid fa-globe"></i> Gateway</span>
                 {% else %}
-                <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,77,109,0.12);color:#FF4D6D"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Unavailable</span>
+                <span style="font-size:.65rem;padding:.2rem .5rem;border-radius:100px;background:rgba(239,68,68,.1);color:var(--red)">Unavailable</span>
                 {% endif %}
               </div>
               {% if ipfs_gateway_url %}
-              <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" rel="noopener" class="flex items-center gap-1.5 text-xs" style="color:#8B5CF6">
+              <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" rel="noopener" class="flex items-center gap-1.5 text-xs mt-2 hover:underline" style="color:var(--purple)">
                 <i class="fa-solid fa-arrow-up-right-from-square"></i> View on IPFS Gateway
               </a>
               {% endif %}
             </div>
             {% endif %}
             {% endif %}
+
           </div>
         </div>
         {% endblock %}
         {% endif %}
-      </div>
 
+      </div><!-- end results panel -->
     </div>
   </div>
 
   <!-- Copy toast -->
-  <div id="copy-toast" class="fixed bottom-6 right-6 text-navy text-sm font-semibold px-4 py-2 rounded-xl opacity-0 transition-opacity duration-300 pointer-events-none" style="background:#00E5A0">
-    <i class="fa-solid fa-check mr-1"></i> Copied!
+  <div id="copy-toast" class="fixed bottom-6 right-6 text-sm font-semibold px-4 py-2.5 rounded-xl opacity-0 transition-opacity duration-300 pointer-events-none" style="background:var(--emerald);color:#fff">
+    <i class="fa-solid fa-check mr-1.5"></i> Copied!
   </div>
 
   <script>
@@ -445,22 +511,108 @@
         if (el) { el.classList.remove('opacity-0'); setTimeout(() => el.classList.add('opacity-0'), 2000); }
       });
     }
-    // Loading spinner: use setTimeout so form submits FIRST, then button visually updates
-    // Disabling the button before submission strips its name/value from POST data!
+
     document.querySelectorAll('form').forEach(form => {
       form.addEventListener('submit', function(e) {
         const btn = this.querySelector('button[type="submit"]:not([data-no-spinner])');
         if (btn) {
-          // Store original content, change appearance AFTER a tick (not before)
-          const orig = btn.innerHTML;
           setTimeout(() => {
-            btn.style.opacity = '0.7';
-            btn.style.cursor = 'not-allowed';
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing...';
+            btn.style.opacity = '0.6';
+            btn.style.cursor  = 'not-allowed';
+            btn.innerHTML     = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing…';
           }, 10);
         }
       });
     });
+
+    // ── AI Risk Assessment ─────────────────────────────────────────
+    async function checkAIModelReady() {
+      const banner = document.getElementById('ai-model-check');
+      if (!banner) return;
+      try {
+        const res  = await fetch('/fl/status');
+        const data = await res.json();
+        if (data.global_model_ready) {
+          banner.style.cssText = 'background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);color:var(--emerald);padding:.75rem;border-radius:10px;font-size:.75rem;display:flex;align-items:center;gap:.625rem';
+          banner.innerHTML = `<i class="fa-solid fa-circle-check"></i> Global AI model ready — Round ${data.round}, ${(data.hospitals_trained||[]).length} hospitals contributed`;
+        } else {
+          banner.style.cssText = 'background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);color:var(--amber);padding:.75rem;border-radius:10px;font-size:.75rem;display:flex;align-items:center;gap:.625rem';
+          banner.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Model training in progress (${data.progress_pct || 0}% complete). Ask your doctor to complete hospital training.`;
+        }
+      } catch(e) {
+        banner.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Could not check model status.';
+      }
+    }
+
+    async function runAIPredict() {
+      const btn      = document.getElementById('ai-predict-btn');
+      const resultEl = document.getElementById('ai-result');
+      btn.disabled   = true;
+      btn.innerHTML  = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Analyzing vitals…';
+
+      const payload = {
+        age:               parseFloat(document.getElementById('ai-age').value),
+        systolic_bp:       parseFloat(document.getElementById('ai-sbp').value),
+        diastolic_bp:      parseFloat(document.getElementById('ai-dbp').value),
+        heart_rate:        parseFloat(document.getElementById('ai-hr').value),
+        glucose_level:     parseFloat(document.getElementById('ai-glucose').value),
+        bmi:               parseFloat(document.getElementById('ai-bmi').value),
+        cholesterol:       parseFloat(document.getElementById('ai-chol').value),
+        oxygen_saturation: parseFloat(document.getElementById('ai-o2').value),
+      };
+
+      try {
+        const res = await fetch('/fl/predict', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload),
+        });
+
+        if (res.status === 404) {
+          resultEl.classList.remove('hidden');
+          resultEl.innerHTML = '<div class="p-3 rounded-xl text-xs" style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);color:var(--amber)"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Global model not ready. Ask your doctor to complete training first.</div>';
+          btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Assess Disease Risk';
+          return;
+        }
+
+        const data   = await res.json();
+        const isHigh = data.prediction === 1;
+        const color  = isHigh ? 'var(--red)'     : 'var(--emerald)';
+        const bgClr  = isHigh ? 'rgba(239,68,68,.07)' : 'rgba(16,185,129,.07)';
+        const bdClr  = isHigh ? 'rgba(239,68,68,.2)'  : 'rgba(16,185,129,.2)';
+        const icon   = isHigh ? 'fa-heart-crack' : 'fa-heart';
+
+        resultEl.classList.remove('hidden');
+        resultEl.innerHTML = `
+          <div style="border:1px solid ${bdClr};border-radius:12px;overflow:hidden">
+            <div style="background:${bgClr};padding:1.25rem;text-align:center">
+              <i class="fa-solid ${icon} fa-2x mb-2" style="color:${color};display:block"></i>
+              <div class="hfont" style="font-size:1.375rem;font-weight:700;color:${color};margin-bottom:.25rem">${data.risk_label}</div>
+              <div style="font-size:.8rem;color:#94A3B8">Risk probability: <strong style="color:#E2E8F0">${data.probability}%</strong></div>
+              <div style="max-width:200px;margin:.75rem auto 0;height:6px;border-radius:3px;background:rgba(255,255,255,.07)">
+                <div style="width:${data.probability}%;height:100%;border-radius:3px;background:${color};transition:width .6s"></div>
+              </div>
+              <div style="font-size:.7rem;color:#475569;margin-top:.5rem">${data.model_version}</div>
+            </div>
+            <div style="padding:1rem;background:rgba(255,255,255,.015)">
+              <p style="font-size:.7rem;color:#64748B;margin-bottom:.625rem;text-transform:uppercase;letter-spacing:.05em">Vitals used</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.25rem .75rem">
+                ${Object.entries(data.input_features).map(([k,v]) =>
+                  `<div style="display:flex;justify-content:space-between;font-size:.75rem">
+                     <span style="color:#64748B">${k.replace(/_/g,' ')}</span>
+                     <span style="color:#E2E8F0;font-family:monospace">${v}</span>
+                   </div>`
+                ).join('')}
+              </div>
+            </div>
+          </div>`;
+      } catch(e) {
+        resultEl.classList.remove('hidden');
+        resultEl.innerHTML = `<div class="p-3 rounded-xl text-xs" style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);color:var(--red)"><i class="fa-solid fa-circle-xmark mr-1"></i>Prediction failed: ${e.message}</div>`;
+      }
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Assess Disease Risk';
+    }
+
+    window.addEventListener('DOMContentLoaded', checkAIModelReady);
   </script>
 </body>
 </html>

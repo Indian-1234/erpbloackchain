@@ -4,192 +4,133 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EHR Chain — Login</title>
-  <meta name="description" content="Login to your EHR Chain account — patient or doctor access.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy:    { DEFAULT: '#0A0F1E', 800: '#0D1426', 700: '#111827' },
-            cyan:    { DEFAULT: '#00D4FF', dark: '#00A8CC' },
-            emerald: { DEFAULT: '#00E5A0', dark: '#00B87A' },
-            coral:   { DEFAULT: '#FF4D6D', dark: '#CC3A55' },
-          },
-          fontFamily: {
-            sans:    ['Inter', 'sans-serif'],
-            heading: ['Space Grotesk', 'sans-serif'],
-          },
-          animation: {
-            'pulse-slow': 'pulse 3s cubic-bezier(0.4,0,0.6,1) infinite',
-            'slide-up':   'slideUp 0.6s ease forwards',
-            'fade-in':    'fadeIn 0.5s ease forwards',
-          },
-          keyframes: {
-            slideUp: { '0%': { opacity: 0, transform: 'translateY(24px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
-            fadeIn:  { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
-          }
-        }
-      }
-    }
-  </script>
   <style>
-    body { background-color: #0A0F1E; }
-    .glass { background: rgba(255,255,255,0.04); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
-    .gradient-text { background: linear-gradient(135deg, #00D4FF, #00E5A0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .hex-bg {
-      background-image: url("data:image/svg+xml,%3Csvg width='60' height='52' viewBox='0 0 60 52' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 17.3v17.3L30 52 0 34.6V17.3z' fill='none' stroke='rgba(0,212,255,0.06)' stroke-width='1'/%3E%3C/svg%3E");
-      background-size: 60px 52px;
-    }
-    .input-field {
-      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px; padding: 12px 16px 12px 44px; color: white; outline: none; transition: all 0.2s;
-    }
-    .input-field::placeholder { color: rgba(255,255,255,0.3); }
-    .input-field:focus { border-color: #00D4FF; box-shadow: 0 0 0 1px rgba(0,212,255,0.3); }
+    :root { --bg:#07111E; --surface:#0D1A2E; --card:#112238; --border:rgba(255,255,255,0.07); --blue:#3B82F6; --emerald:#10B981; --purple:#8B5CF6; --red:#EF4444; --text:#E2E8F0; --muted:#64748B; }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; }
+    .hfont { font-family:'Space Grotesk',sans-serif; }
+    .panel-left { background:linear-gradient(150deg,#0D1A2E 0%,#07111E 100%); border-right:1px solid var(--border); }
+    .input-wrap { position:relative; }
+    .input-wrap .icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#475569; pointer-events:none; font-size:.85rem; }
+    .input-field { width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09); border-radius:10px; padding:11px 14px 11px 42px; color:var(--text); outline:none; transition:all .2s; font-size:.875rem; font-family:'Inter',sans-serif; }
+    .input-field::placeholder { color:rgba(255,255,255,0.22); }
+    .input-field:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(59,130,246,.15); }
+    .btn-primary { background:var(--blue); color:#fff; font-weight:600; padding:.875rem 1.5rem; border-radius:10px; font-family:'Space Grotesk',sans-serif; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:.5rem; width:100%; }
+    .btn-primary:hover { background:#2563EB; }
+    .check-item { display:flex; align-items:center; gap:.75rem; font-size:.875rem; color:#94A3B8; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .anim { animation:slideUp .5s ease forwards; }
   </style>
 </head>
-<body class="bg-navy text-white font-sans min-h-screen antialiased flex">
+<body class="min-h-screen antialiased flex">
 
-  <!-- LEFT DECORATIVE PANEL -->
-  <div class="hidden lg:flex flex-col justify-between w-1/2 min-h-screen hex-bg p-12 relative overflow-hidden" style="background-color:#080D1A">
-    <!-- Glow effects -->
-    <div class="absolute top-1/4 left-1/4 w-64 h-64 rounded-full opacity-10 blur-3xl pointer-events-none" style="background:#00D4FF"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full opacity-10 blur-3xl pointer-events-none" style="background:#00E5A0"></div>
-
-    <!-- Logo -->
-    <a href="/" class="flex items-center gap-2 font-heading font-bold text-xl relative z-10">
-      <i class="fa-solid fa-cube" style="color:#00D4FF"></i>
-      <span class="gradient-text">EHR Chain</span>
+  <!-- Left info panel -->
+  <div class="hidden lg:flex panel-left flex-col justify-between w-5/12 min-h-screen p-12 relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-full h-full pointer-events-none" style="background:radial-gradient(ellipse 60% 40% at 30% 60%,rgba(59,130,246,.08),transparent)"></div>
+    <a href="/" class="flex items-center gap-2.5 hfont font-bold text-lg relative z-10">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:var(--blue)">
+        <i class="fa-solid fa-heart-pulse text-white text-sm"></i>
+      </div>
+      <span class="text-white">EHR<span style="color:var(--blue)">Chain</span></span>
     </a>
-
-    <!-- Center content -->
     <div class="relative z-10">
-      <h2 class="font-heading font-bold text-4xl text-white mb-4 leading-tight">
-        Your health data,<br>
-        <span class="gradient-text">your control.</span>
+      <h2 class="hfont font-bold text-4xl text-white mb-4 leading-snug">
+        Your health.<br><span style="color:var(--blue)">Your control.</span>
       </h2>
-      <p class="text-white/40 mb-10 text-lg">Access your blockchain-secured medical records with your wallet address.</p>
+      <p class="text-base mb-10" style="color:var(--muted)">Access your blockchain-secured medical records with your wallet address.</p>
       <ul class="space-y-4">
-        <li class="flex items-center gap-3 text-white/70">
-          <i class="fa-solid fa-circle-check text-lg" style="color:#00E5A0"></i>
-          <span>End-to-end encrypted records</span>
-        </li>
-        <li class="flex items-center gap-3 text-white/70">
-          <i class="fa-solid fa-circle-check text-lg" style="color:#00E5A0"></i>
-          <span>Smart contract access permissions</span>
-        </li>
-        <li class="flex items-center gap-3 text-white/70">
-          <i class="fa-solid fa-circle-check text-lg" style="color:#00E5A0"></i>
-          <span>Immutable audit trail on Ethereum</span>
-        </li>
+        <li class="check-item"><i class="fa-solid fa-circle-check" style="color:var(--emerald)"></i> End-to-end Fernet encryption</li>
+        <li class="check-item"><i class="fa-solid fa-circle-check" style="color:var(--emerald)"></i> Smart contract access permissions</li>
+        <li class="check-item"><i class="fa-solid fa-circle-check" style="color:var(--emerald)"></i> Immutable audit trail on Ethereum</li>
+        <li class="check-item"><i class="fa-solid fa-circle-check" style="color:var(--emerald)"></i> AI disease risk prediction</li>
       </ul>
     </div>
-
-    <!-- Bottom stat -->
-    <div class="relative z-10 flex items-center gap-2 text-white/30 text-sm">
-      <i class="fa-brands fa-ethereum" style="color:#00D4FF"></i>
-      Distributed EHR System — All humans working for you.
-    </div>
+    <p class="relative z-10 text-xs" style="color:#334155"><i class="fa-brands fa-ethereum mr-2" style="color:var(--blue)"></i>Ethereum · IPFS · Federated Learning</p>
   </div>
 
-  <!-- RIGHT LOGIN PANEL -->
-  <div class="flex flex-col items-center justify-center w-full lg:w-1/2 px-6 py-12 min-h-screen">
+  <!-- Right login panel -->
+  <div class="flex flex-col items-center justify-center flex-1 px-6 py-12 min-h-screen">
+
     <!-- Mobile logo -->
-    <a href="/" class="flex lg:hidden items-center gap-2 font-heading font-bold text-xl mb-8">
-      <i class="fa-solid fa-cube" style="color:#00D4FF"></i>
-      <span class="gradient-text">EHR Chain</span>
+    <a href="/" class="flex lg:hidden items-center gap-2 hfont font-bold text-lg mb-8">
+      <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:var(--blue)">
+        <i class="fa-solid fa-heart-pulse text-white text-xs"></i>
+      </div>
+      <span class="text-white">EHR<span style="color:var(--blue)">Chain</span></span>
     </a>
 
-    <div class="glass rounded-2xl shadow-2xl w-full max-w-md p-8 animate-slide-up">
-      <!-- Header -->
+    <div class="w-full max-w-md anim" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2.5rem 2rem;box-shadow:0 25px 60px rgba(0,0,0,.5)">
       <div class="text-center mb-8">
-        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:rgba(0,212,255,0.1)">
-          <i class="fa-solid fa-link text-2xl" style="color:#00D4FF"></i>
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.2)">
+          <i class="fa-solid fa-wallet text-2xl" style="color:var(--blue)"></i>
         </div>
-        <h1 class="font-heading font-bold text-2xl text-white mb-1">Connect & Login</h1>
-        <p class="text-white/40 text-sm">Enter your blockchain credentials to access your account</p>
+        <h1 class="hfont font-bold text-2xl text-white mb-1">Sign In</h1>
+        <p class="text-sm" style="color:var(--muted)">Enter your blockchain credentials to continue</p>
       </div>
 
-      <!-- LOGIN FORM — Jinja2 form preserved exactly -->
+      <!-- Error display -->
+      {% if error %}
+      <div class="flex items-start gap-3 p-4 rounded-xl mb-6" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25)">
+        <i class="fa-solid fa-circle-xmark mt-0.5 shrink-0" style="color:var(--red)"></i>
+        <p class="text-sm" style="color:#FCA5A5">{{ error }}</p>
+      </div>
+      {% endif %}
+
       <form action="" method="post" role="form" class="space-y-5">
         {{ form.csrf_token() }}
 
-        <!-- Account Address -->
         <div>
-          <label for="user_name" class="block text-sm text-white/60 mb-2">Blockchain Account Address</label>
-          <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style="color:rgba(0,212,255,0.6)">
-              <i class="fa-solid fa-wallet text-sm"></i>
-            </span>
-            {{ form.user_name(id="user_name", class="input-field", placeholder="0x... (Your blockchain address)", **{"aria-label": "Blockchain Account Address"}) }}
+          <label for="user_name" class="block text-sm font-medium mb-2" style="color:#CBD5E1">Blockchain Account Address</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-wallet icon"></i>
+            {{ form.user_name(id="user_name", class="input-field", placeholder="0x... your wallet address", **{"aria-label":"Blockchain Account Address"}) }}
           </div>
         </div>
 
-        <!-- Contract Address -->
         <div>
-          <label for="contract_address" class="block text-sm text-white/60 mb-2">Contract Address</label>
-          <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style="color:rgba(0,229,160,0.6)">
-              <i class="fa-solid fa-file-contract text-sm"></i>
-            </span>
-            {{ form.contract_address(id="contract_address", class="input-field", placeholder="From patient signup (or 0 for Doctor)", **{"aria-label": "Contract Address"}) }}
+          <label for="contract_address" class="block text-sm font-medium mb-2" style="color:#CBD5E1">Contract Address</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-file-contract icon"></i>
+            {{ form.contract_address(id="contract_address", class="input-field", placeholder="Patient contract address (enter 0 if Doctor)", **{"aria-label":"Contract Address"}) }}
           </div>
-          <p class="text-white/30 text-xs mt-1.5 ml-1">Tip: Enter <code class="text-cyan-DEFAULT" style="color:#00D4FF">0</code> if you are a Doctor / Auditor</p>
+          <p class="text-xs mt-1.5 pl-1" style="color:var(--muted)">
+            <i class="fa-solid fa-circle-info mr-1" style="color:var(--blue)"></i>
+            Doctors: enter <code style="color:var(--blue);background:rgba(59,130,246,.1);padding:1px 5px;border-radius:4px">0</code>
+          </p>
         </div>
 
-        <!-- Password -->
         <div>
-          <label for="password" class="block text-sm text-white/60 mb-2">Password</label>
-          <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style="color:rgba(255,255,255,0.3)">
-              <i class="fa-solid fa-lock text-sm"></i>
-            </span>
-            {{ form.password(id="password", class="input-field", placeholder="Your password", **{"aria-label": "Password"}) }}
+          <label for="password" class="block text-sm font-medium mb-2" style="color:#CBD5E1">Password</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-lock icon"></i>
+            {{ form.password(id="password", class="input-field", placeholder="Your password", type="password", **{"aria-label":"Password"}) }}
           </div>
         </div>
 
-        <!-- Error display — Jinja2 preserved -->
-        {% if error %}
-        <div class="flex items-start gap-3 p-4 rounded-xl" style="background:rgba(255,77,109,0.1); border:1px solid rgba(255,77,109,0.3)">
-          <i class="fa-solid fa-triangle-exclamation mt-0.5" style="color:#FF4D6D"></i>
-          <p class="text-sm" style="color:#FF4D6D">{{ error }}</p>
-        </div>
-        {% endif %}
-
-        <!-- Submit -->
-        <button type="submit" id="login-btn" aria-label="Login to your account" class="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-heading font-semibold text-navy transition-all duration-200 hover:opacity-90 active:scale-95" style="background:#00D4FF">
-          <i class="fa-solid fa-link"></i>
-          Connect & Login
+        <button type="submit" id="login-btn" class="btn-primary mt-2" aria-label="Sign In">
+          <i class="fa-solid fa-right-to-bracket"></i> Sign In to EHRChain
         </button>
       </form>
 
-      <!-- Links -->
-      <div class="mt-6 pt-6 border-t border-white/5 space-y-2 text-center">
-        <p class="text-white/40 text-sm">
-          New patient?
-          <a href="/patientreg" class="font-medium transition-colors hover:text-white" style="color:#00D4FF">Create Patient Account</a>
+      <div class="mt-6 pt-6 space-y-2 text-center" style="border-top:1px solid var(--border)">
+        <p class="text-sm" style="color:var(--muted)">
+          New patient? <a href="/patientreg" class="font-medium hover:text-white transition-colors" style="color:var(--blue)">Create account</a>
         </p>
-        <p class="text-white/40 text-sm">
-          New doctor?
-          <a href="/auditreg" class="font-medium transition-colors hover:text-white" style="color:#00E5A0">Register as Doctor</a>
+        <p class="text-sm" style="color:var(--muted)">
+          New doctor? <a href="/auditreg" class="font-medium hover:text-white transition-colors" style="color:var(--emerald)">Register as doctor</a>
         </p>
       </div>
     </div>
   </div>
 
-  <!-- Loading spinner on submit -->
   <script>
     document.querySelectorAll('form').forEach(form => {
       form.addEventListener('submit', () => {
         const btn = form.querySelector('button[type="submit"]');
-        if (btn) {
-          btn.disabled = true;
-          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Connecting...';
-        }
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Connecting…'; }
       });
     });
   </script>
