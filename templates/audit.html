@@ -183,15 +183,15 @@
               </div>
               <div>
                 <h2 class="font-heading font-semibold text-white">Update Medical Records</h2>
-                <p class="text-white/40 text-xs">Write clinical notes to the blockchain</p>
+                <p class="text-white/40 text-xs">Uploaded to IPFS → CID stored on blockchain</p>
               </div>
             </div>
             <span class="flex items-center gap-1.5 text-xs" style="color:#00E5A0">
               <span class="w-1.5 h-1.5 rounded-full animate-pulse-slow" style="background:#00E5A0"></span>
-              On-chain
+              IPFS + Chain
             </span>
           </div>
-          <form action="" method="post" role="form">
+          <form action="" method="post" role="form" enctype="multipart/form-data">
             {{ form.csrf_token() }}
             <div class="space-y-4">
               <div>
@@ -202,8 +202,16 @@
                 <label for="update_record_rec" class="block text-sm text-white/50 mb-2">Medical Notes / New Record</label>
                 {{ form.update_record_rec(id="update_record_rec", class="textarea-field", placeholder="Enter clinical notes, diagnosis, prescription...", **{"aria-label": "Medical Record Details"}) }}
               </div>
-              <button type="submit" name="action2" value="VALUE2" aria-label="Save to Blockchain" class="flex items-center justify-center gap-2 w-full px-6 py-3 rounded-xl font-heading font-semibold text-navy text-sm transition-all hover:opacity-90 active:scale-95" style="background:#00E5A0">
-                <i class="fa-solid fa-floppy-disk"></i> Save to Blockchain
+              <!-- IPFS File Upload -->
+              <div class="p-3 rounded-xl" style="background:rgba(0,229,160,0.05);border:1px dashed rgba(0,229,160,0.3)">
+                <label class="block text-xs mb-2" style="color:#00E5A0"><i class="fa-brands fa-ethereum mr-1"></i>Attach File to IPFS (optional — overrides text above)</label>
+                <input type="file" name="ipfs_file" id="ipfs_file" accept="*/*" aria-label="Attach file for IPFS upload"
+                  class="block w-full text-sm text-white/60 file:mr-3 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:cursor-pointer"
+                  style="file:background:rgba(0,229,160,0.15);file:color:#00E5A0">
+                <p class="text-white/30 text-xs mt-1.5">PDF, images, JSON, DICOM — any file up to 50MB</p>
+              </div>
+              <button type="submit" name="action2" value="VALUE2" id="btn-update" aria-label="Upload to IPFS and Save to Blockchain" class="flex items-center justify-center gap-2 w-full px-6 py-3 rounded-xl font-heading font-semibold text-navy text-sm transition-all hover:opacity-90 active:scale-95" style="background:#00E5A0">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload to IPFS &amp; Save to Blockchain
               </button>
             </div>
           </form>
@@ -271,10 +279,25 @@
             </div>
           </div>
           <div class="space-y-3">
+            <!-- IPFS Upload Status Banner -->
+            {% if ipfs_upload_success is defined %}
+            {% if ipfs_upload_success %}
+            <div class="flex items-center gap-2 p-3 rounded-xl text-xs" style="background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.25);color:#00E5A0">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <span>Record uploaded to IPFS successfully. CID stored on blockchain.</span>
+            </div>
+            {% else %}
+            <div class="flex items-center gap-2 p-3 rounded-xl text-xs" style="background:rgba(255,184,48,0.08);border:1px solid rgba(255,184,48,0.25);color:#FFB830">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span>IPFS unavailable — raw text saved directly to blockchain as fallback.</span>
+            </div>
+            {% endif %}
+            {% endif %}
             <div class="p-3 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)">
               <p class="text-xs text-white/40 mb-1">Tx Hash</p>
               <p class="text-xs font-mono text-white break-all">{{ tx_hash[:40] }}...</p>
             </div>
+            {% if event_logs and event_logs|length > 0 %}
             {% if event_logs[0]['args']['record_unique_id'] %}
             <div class="p-3 rounded-xl" style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.2)">
               <p class="text-xs mb-1" style="color:rgba(139,92,246,0.8)">Unique Record ID</p>
@@ -306,11 +329,77 @@
               <p class="text-xs text-white/30 mt-1">Epoch: {{ event_logs[0]['args']['record_time'] }}</p>
             </div>
             {% endif %}
+            {% endif %}
             {% if record_details %}
+            <!-- IPFS-aware record details block -->
             <div class="p-3 rounded-xl" style="background:rgba(0,229,160,0.06);border:1px solid rgba(0,229,160,0.2)">
-              <p class="text-xs mb-1" style="color:#00E5A0">Medical Record Details</p>
-              <p class="text-sm text-white leading-relaxed">{{ record_details }}</p>
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-xs font-semibold" style="color:#00E5A0"><i class="fa-solid fa-file-medical mr-1"></i>Medical Record Details</p>
+                {% if ipfs_cid %}
+                <span class="text-xs px-2 py-0.5 rounded-full font-semibold" style="background:rgba(0,229,160,0.15);color:#00E5A0;border:1px solid rgba(0,229,160,0.3)">
+                  <i class="fa-solid fa-circle-check mr-1"></i>IPFS
+                </span>
+                {% else %}
+                <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4)">
+                  On-chain
+                </span>
+                {% endif %}
+              </div>
+              
+              {% if is_binary or (ipfs_cid and record_details|length > 200) %}
+              <div class="flex flex-col items-center py-6 text-center bg-white/5 rounded-2xl border border-white/10 my-2">
+                {% if record_details and record_details|length < 500 %}
+                <div class="mb-6 px-4 w-full">
+                    <p class="text-xs text-white/40 uppercase tracking-widest mb-2 font-bold">Clinical Notes</p>
+                    <p class="text-sm text-white leading-relaxed">{{ record_details }}</p>
+                    <div class="h-px w-12 bg-white/10 mx-auto mt-4"></div>
+                </div>
+                {% endif %}
+                
+                <div class="w-16 h-16 rounded-3xl flex items-center justify-center mb-4 shadow-2xl" style="background:rgba(0,229,160,0.15);color:#00E5A0;border:1px solid rgba(0,229,160,0.3)">
+                    <i class="fa-solid fa-file-medical fa-2x"></i>
+                </div>
+                <h4 class="text-sm font-bold text-white mb-1">File Attachment</h4>
+                <p class="text-xs text-white/50 mb-6 px-4">This record contains a protected file stored on IPFS.</p>
+                <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" class="px-8 py-3 rounded-2xl text-sm font-black transition-all hover:scale-105 active:scale-95 shadow-xl shadow-emerald-500/30" style="background:#00E5A0;color:#000">
+                    <i class="fa-solid fa-eye mr-2"></i>View & Download Record
+                </a>
+              </div>
+              {% else %}
+              <p class="text-sm text-white leading-relaxed whitespace-pre-wrap p-2">{{ record_details }}</p>
+              {% endif %}
             </div>
+            {% if ipfs_cid %}
+            <!-- IPFS CID Info -->
+            <div class="p-3 rounded-xl space-y-2" style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.2)">
+              <p class="text-xs font-semibold" style="color:#8B5CF6"><i class="fa-solid fa-cubes mr-1"></i>IPFS Storage Info</p>
+              <!-- CID -->
+              <div>
+                <p class="text-xs text-white/40 mb-1">Content ID (CID)</p>
+                <p class="text-xs font-mono text-white break-all" id="ipfs-cid-text">{{ ipfs_cid }}</p>
+                <button onclick="copyText(document.getElementById('ipfs-cid-text').textContent.trim())" class="mt-1.5 text-xs px-3 py-1 rounded-lg" style="background:rgba(139,92,246,0.1);color:#8B5CF6;border:1px solid rgba(139,92,246,0.2)">
+                  <i class="fa-solid fa-copy mr-1"></i>Copy CID
+                </button>
+              </div>
+              <!-- Source badge -->
+              <div class="flex items-center gap-2">
+                <p class="text-xs text-white/40">Retrieved from:</p>
+                {% if ipfs_source == 'local' %}
+                <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(0,229,160,0.12);color:#00E5A0"><i class="fa-solid fa-server mr-1"></i>Local Node</span>
+                {% elif ipfs_source == 'gateway' %}
+                <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(0,212,255,0.12);color:#00D4FF"><i class="fa-solid fa-globe mr-1"></i>Public Gateway</span>
+                {% else %}
+                <span class="text-xs px-2 py-0.5 rounded-full" style="background:rgba(255,77,109,0.12);color:#FF4D6D"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Unavailable</span>
+                {% endif %}
+              </div>
+              <!-- View on gateway -->
+              {% if ipfs_gateway_url and ipfs_cid %}
+              <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" rel="noopener" class="flex items-center gap-1.5 text-xs mt-1" style="color:#8B5CF6">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> View on IPFS Gateway
+              </a>
+              {% endif %}
+            </div>
+            {% endif %}
             {% endif %}
           </div>
         </div>

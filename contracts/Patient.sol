@@ -36,7 +36,7 @@ contract Patient{
         string record_msg;
         uint record_status; // 0-Created, 1-Deleted, 2-Changed, 3-Queried, 4-Printed, 5-Copied
         
-        // all images files etc will be stored here
+        // all images files etc will be stored here (holds IPFS CID or raw text)
         string record_details;
         
         address patient_address;
@@ -289,7 +289,7 @@ contract Patient{
     // doctor deletes medical record
     function doctor_delete_record(address _unique_id) public returns (string memory){
         require(record_mapping[_unique_id].is_uid_generated);
-        require(doctors[msg.sender]);
+        require(doctors[msg.sender] || audits[msg.sender]);
         require(record_mapping[_unique_id].record_status!=1);
     
         record_mapping[_unique_id].doctor = msg.sender;
@@ -308,7 +308,7 @@ contract Patient{
     // doctor prints medical record
     function doctor_print_record(address _unique_id) public returns (string memory){
         require(record_mapping[_unique_id].is_uid_generated);
-        require(doctors[msg.sender]);
+        require(doctors[msg.sender] || audits[msg.sender]);
         require(record_mapping[_unique_id].record_status!=1);
     
         record_mapping[_unique_id].doctor = msg.sender;
@@ -326,7 +326,7 @@ contract Patient{
     // doctor query medical record
     function doctor_query_record(address _unique_id) public returns (string memory){
         require(record_mapping[_unique_id].is_uid_generated);
-        require(doctors[msg.sender]);
+        require(doctors[msg.sender] || audits[msg.sender]);
         require(record_mapping[_unique_id].record_status!=1);
     
         record_mapping[_unique_id].doctor = msg.sender;
@@ -362,7 +362,7 @@ contract Patient{
      // doctor update medical record
     function doctor_update_record(address _unique_id, string memory _update) public returns (string memory){
         require(record_mapping[_unique_id].is_uid_generated);
-        require(doctors[msg.sender]);
+        require(doctors[msg.sender] || audits[msg.sender]);
         require(record_mapping[_unique_id].record_status!=1);
     
         record_mapping[_unique_id].doctor = msg.sender;

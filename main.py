@@ -105,6 +105,72 @@ enc_key  = file.read()
 file.close()
 fernet = Fernet(enc_key)
 
+# IPFS Configuration
+IPFS_API_URL = "http://127.0.0.1:5001/api/v0"
+IPFS_GATEWAY_URL = "https://ipfs.io/ipfs/"
+
+def upload_to_ipfs(data):
+    """Upload data (text or bytes) to IPFS and return CID"""
+    try:
+        if isinstance(data, str):
+            data = data.encode('utf-8')
+        files = {'file': ('record.txt', data, 'text/plain')}
+        response = requests.post(f"{IPFS_API_URL}/add", files=files, timeout=10)
+        if response.status_code == 200:
+            cid = response.json()['Hash']
+            print(f"IPFS upload successful. CID: {cid}")
+            return cid
+        else:
+            print(f"IPFS upload failed: {response.text}")
+            return None
+    except Exception as e:
+        print(f"Error connecting to IPFS: {str(e)}")
+        return None
+
+def fetch_from_ipfs(cid_input):
+    """Fetch data from IPFS, handles hybrid text|CID records"""
+    text_notes = ""
+    target_cid = cid_input
+    
+    # Check if this is a hybrid record (Text | IPFS_CID:xxxx)
+    if isinstance(cid_input, str) and " | IPFS_CID:" in cid_input:
+        parts = cid_input.split(" | IPFS_CID:", 1)
+        text_notes = parts[0].strip()
+        target_cid = parts[1].strip()
+        print(f"DEBUG: Hybrid record detected. Notes: '{text_notes}', CID: '{target_cid}'")
+
+    if not is_ipfs_cid(target_cid):
+        return cid_input, 'chain', False
+
+    try:
+        response = requests.post(f"{IPFS_API_URL}/cat?arg={target_cid}", timeout=8)
+        if response.status_code == 200:
+            content = response.content
+            binary_signatures = [b'\x89PNG', b'\xff\xd8\xff', b'%PDF', b'IDAT', b'IHDR']
+            if any(sig in content for sig in binary_signatures):
+                display_text = text_notes if text_notes else "Medical Attachment"
+                return display_text, 'local', True, target_cid
+            
+            try:
+                text = content.decode('utf-8')
+                if any(ord(c) < 32 and c not in '\n\r\t' for c in text[:500]):
+                     display_text = text_notes if text_notes else "Medical Attachment"
+                     return display_text, 'local', True, target_cid
+                
+                combined = f"{text_notes}\n\n{text}" if text_notes else text
+                return combined.strip(), 'local', False, target_cid
+            except UnicodeDecodeError:
+                display_text = text_notes if text_notes else "Medical Attachment"
+                return display_text, 'local', True, target_cid
+    except Exception:
+        pass
+    
+    return f"Error: Could not fetch from IPFS", 'error', False, target_cid
+
+def is_ipfs_cid(value):
+    """Check if a string looks like an IPFS CID"""
+    return isinstance(value, str) and value.startswith(('Qm', 'bafy', '1220'))
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     return render_template('index.html')
@@ -433,7 +499,9 @@ def patientdash():
         elif  request.form.get('action6') == 'VALUE6':
             isCard  = True
             unique_id = form.print_record.data
-            unique_id = unique_id.lower()
+            unique_id = unique_id.strip().lower()
+            if not Web3.is_address(unique_id):
+                return render_template("patient.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result="Error: Invalid Record ID format. Please enter a valid Ethereum address.", tx_hash="")
             unique_id = Web3.to_checksum_address(unique_id)
             result = "Patient printed their medical records."
 
@@ -450,16 +518,24 @@ def patientdash():
             print("--------------------end changes-------------")
 
             # get medical record details
-            record_details  = contract.functions.get_record_details(unique_id).call()
-            print(record_details)
-
-            ################## End Solidity TRansaction ###############
-            return render_template("patient.html", form=form, isCard  = isCard, username=account_address,contract_address=contract_address, result=result, tx_receipt = tx_receipt, tx_hash=tx_hash.hex(), event_logs = event_logs, record_details = record_details)
+            try:
+                raw_record = contract.functions.get_record_details(unique_id).call()
+                record_details, ipfs_source, is_binary, ipfs_cid = fetch_from_ipfs(raw_record)
+            except Exception as e:
+                print(f"Contract call failed: {e}")
+                record_details = "Error: Could not retrieve record. It may not exist or you may not have permission."
+                ipfs_cid = None
+                ipfs_source = None
+                is_binary = False
+            
+            return render_template("patient.html", form=form, isCard=isCard, username=account_address, contract_address=contract_address, result=result, tx_receipt=tx_receipt, tx_hash=tx_hash.hex(), event_logs=event_logs, record_details=record_details, ipfs_cid=ipfs_cid, ipfs_source=ipfs_source, ipfs_gateway_url=IPFS_GATEWAY_URL, is_binary=is_binary)
 
         elif  request.form.get('action7') == 'VALUE7':
             isCard  = True
             unique_id = form.delete_record.data
-            unique_id = unique_id.lower()
+            unique_id = unique_id.strip().lower()
+            if not Web3.is_address(unique_id):
+                return render_template("patient.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result="Error: Invalid Record ID format. Please enter a valid Ethereum address.", tx_hash="")
             unique_id = Web3.to_checksum_address(unique_id)
             result = "Patient deleted their medical record."
 
@@ -498,7 +574,9 @@ def auditdash():
             print("-------------contract address  = " +contract_address)
             isCard  = True
             unique_id = form.print_record.data
-            unique_id = unique_id.lower()
+            unique_id = unique_id.strip().lower()
+            if not Web3.is_address(unique_id):
+                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result="Error: Invalid Record ID format. Please enter a valid Ethereum address.", tx_hash="")
             unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit printed patient medical records."
 
@@ -507,48 +585,94 @@ def auditdash():
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
             web3.eth.default_account = account_address
-            tx_hash  = contract.functions.doctor_print_record(unique_id).transact()
-            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            try:
+                tx_hash  = contract.functions.doctor_print_record(unique_id).transact()
+                tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            except Exception as e:
+                print(f"Transaction failed: {e}")
+                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result=f"Error: Transaction failed. {e}")
+            
             event_logs = contract.events.event_doctor_print.get_logs()
             print("--------------------changes-------------")
             print(event_logs)
             print("--------------------end changes-------------")
 
             # get medical record details
-            record_details  = contract.functions.get_record_details(unique_id).call()
-            print(record_details)
-
-            ################## End Solidity TRansaction ###############
-            return render_template("audit.html", form=form, isCard  = isCard, username=account_address,contract_address=contract_address, result=result, tx_receipt = tx_receipt, tx_hash=tx_hash.hex(), event_logs = event_logs, record_details = record_details)
+            try:
+                raw_record = contract.functions.get_record_details(unique_id).call()
+                record_details, ipfs_source, is_binary, ipfs_cid = fetch_from_ipfs(raw_record)
+            except Exception as e:
+                print(f"Contract call failed: {e}")
+                record_details = "Error: Could not retrieve record. It may not exist or you may not have permission."
+                ipfs_cid = None
+                ipfs_source = None
+                is_binary = False
+            
+            return render_template("audit.html", form=form, isCard=isCard, username=account_address, contract_address=contract_address, result=result, tx_receipt=tx_receipt, tx_hash=tx_hash.hex(), event_logs=event_logs, record_details=record_details, ipfs_cid=ipfs_cid, ipfs_source=ipfs_source, ipfs_gateway_url=IPFS_GATEWAY_URL, is_binary=is_binary)
 
         elif  request.form.get('action2') == 'VALUE2':
             isCard  = True
             unique_id = form.update_record_id.data
-            unique_id = unique_id.lower()
+            unique_id = unique_id.strip().lower()
+            if not Web3.is_address(unique_id):
+                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result="Error: Invalid Record ID format. Please enter a valid Ethereum address.")
             unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit updated patient medical records."
             new_record = form.update_record_rec.data
             ################## Solidity Transaction ###################
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
-            # assign default address
             web3.eth.default_account = account_address
-            tx_hash  = contract.functions.doctor_update_record(unique_id,new_record).transact()
-            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            # Check if file was also uploaded via IPFS file upload
+            uploaded_file = request.files.get('ipfs_file')
+            if uploaded_file and uploaded_file.filename:
+                file_bytes = uploaded_file.read()
+                ipfs_cid = upload_to_ipfs(file_bytes)
+                if ipfs_cid:
+                    # Store both: Text + CID in a formatted string
+                    record_to_store = f"{new_record} | IPFS_CID:{ipfs_cid}"
+                else:
+                    record_to_store = new_record
+            else:
+                # No file, just check if text should go to IPFS or chain
+                ipfs_cid = upload_to_ipfs(new_record)
+                record_to_store = ipfs_cid if ipfs_cid else new_record
+
+            record_to_store = record_to_store.strip()
+            print(f"DEBUG: Saving to Blockchain: '{record_to_store}'")
+
+            try:
+                tx_hash  = contract.functions.doctor_update_record(unique_id, record_to_store).transact()
+                tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            except Exception as e:
+                print(f"Transaction failed: {e}")
+                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result=f"Error: Transaction failed. {e}", tx_hash="")
+            
             event_logs = contract.events.event_doctor_update.get_logs()
             print("--------------------changes-------------")
             print(event_logs)
             print("--------------------end changes-------------")
 
-            # get medical record details
-            record_details  = contract.functions.get_record_details(unique_id).call()
-            print(record_details)
-            return render_template("audit.html", form=form, isCard  = isCard, username=account_address,contract_address=contract_address, result=result, tx_receipt = tx_receipt, tx_hash=tx_hash.hex(), event_logs = event_logs, record_details = record_details)
+            ipfs_upload_success = bool(ipfs_cid)
+            try:
+                raw_record = contract.functions.get_record_details(unique_id).call()
+                # fetch_from_ipfs now returns (display_text, source, is_binary, actual_cid)
+                record_details, ipfs_source, is_binary, ipfs_cid = fetch_from_ipfs(raw_record)
+            except Exception as e:
+                print(f"Contract call failed: {e}")
+                record_details = "Error: Record updated on blockchain, but could not be verified/retrieved. Check authorization."
+                ipfs_cid = None
+                ipfs_source = None
+                is_binary = False
+            
+            return render_template("audit.html", form=form, isCard=isCard, username=account_address, contract_address=contract_address, result=result, tx_receipt=tx_receipt, tx_hash=tx_hash.hex(), event_logs=event_logs, record_details=record_details, ipfs_cid=ipfs_cid, ipfs_upload_success=ipfs_upload_success, ipfs_source=ipfs_source, ipfs_gateway_url=IPFS_GATEWAY_URL, is_binary=is_binary)
 
         elif  request.form.get('action3') == 'VALUE3':
             isCard  = True
             unique_id = form.query.data
-            unique_id = unique_id.lower()
+            unique_id = unique_id.strip().lower()
+            if not Web3.is_address(unique_id):
+                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result="Error: Invalid Record ID format. Please enter a valid Ethereum address.", tx_hash="")
             unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit queried one of the patient medical records."
 
@@ -557,19 +681,31 @@ def auditdash():
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
             web3.eth.default_account = account_address
-            tx_hash  = contract.functions.doctor_query_record(unique_id).transact()
-            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            try:
+                tx_hash  = contract.functions.doctor_query_record(unique_id).transact()
+                tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            except Exception as e:
+                print(f"Transaction failed: {e}")
+                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result=f"Error: Transaction failed. {e}", tx_hash="")
+            
             event_logs = contract.events.event_doctor_query.get_logs()
             print("--------------------changes-------------")
             print(event_logs)
             print("--------------------end changes-------------")
 
             # get medical record details
-            record_details  = contract.functions.get_record_details(unique_id).call()
-            print(record_details)
-
+            try:
+                raw_record = contract.functions.get_record_details(unique_id).call()
+                record_details, ipfs_source, is_binary, ipfs_cid = fetch_from_ipfs(raw_record)
+            except Exception as e:
+                print(f"Contract call failed: {e}")
+                record_details = "Error: Could not retrieve record. It may not exist or you may not have permission."
+                ipfs_cid = None
+                ipfs_source = None
+                is_binary = False
+            
             ################## End Solidity TRansaction ###############
-            return render_template("audit.html", form=form, isCard  = isCard, username=account_address,contract_address=contract_address, result=result, tx_receipt = tx_receipt, tx_hash=tx_hash.hex(), event_logs = event_logs, record_details = record_details)
+            return render_template("audit.html", form=form, isCard=isCard, username=account_address, contract_address=contract_address, result=result, tx_receipt=tx_receipt, tx_hash=tx_hash.hex(), event_logs=event_logs, record_details=record_details, ipfs_cid=ipfs_cid, ipfs_source=ipfs_source, ipfs_gateway_url=IPFS_GATEWAY_URL, is_binary=is_binary)
 
         elif  request.form.get('action30') == 'VALUE30':
             fname = hashlib.sha224(b"uniqueid_data").hexdigest()
@@ -586,7 +722,9 @@ def auditdash():
         elif  request.form.get('action4') == 'VALUE4':
             isCard  = True
             unique_id = form.copy_record.data
-            unique_id = unique_id.lower()
+            unique_id = unique_id.strip().lower()
+            if not Web3.is_address(unique_id):
+                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result="Error: Invalid Record ID format. Please enter a valid Ethereum address.", tx_hash="")
             unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit copied patient medical records."
 
@@ -595,23 +733,37 @@ def auditdash():
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
             web3.eth.default_account = account_address
-            tx_hash  = contract.functions.doctor_copy_record(unique_id).transact()
-            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            try:
+                tx_hash  = contract.functions.doctor_copy_record(unique_id).transact()
+                tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            except Exception as e:
+                print(f"Transaction failed: {e}")
+                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result=f"Error: Transaction failed. {e}", tx_hash="")
+            
             event_logs = contract.events.event_doctor_copy.get_logs()
             print("--------------------changes-------------")
             print(event_logs)
             print("--------------------end changes-------------")
 
             # get medical record details
-            record_details  = contract.functions.get_record_details(unique_id).call()
-            print(record_details)
-            clipboard.copy(record_details)
-
-            return render_template("audit.html", form=form, isCard  = isCard, username=account_address,contract_address=contract_address, result=result, tx_receipt = tx_receipt, tx_hash=tx_hash.hex(), event_logs = event_logs, record_details = record_details)
+            try:
+                raw_record = contract.functions.get_record_details(unique_id).call()
+                record_details, ipfs_source, is_binary, ipfs_cid = fetch_from_ipfs(raw_record)
+            except Exception as e:
+                print(f"Contract call failed: {e}")
+                record_details = "Error: Could not retrieve record. It may not exist or you may not have permission."
+                ipfs_cid = None
+                ipfs_source = None
+                is_binary = False
+            
+            ################## End Solidity TRansaction ###############
+            return render_template("audit.html", form=form, isCard=isCard, username=account_address, contract_address=contract_address, result=result, tx_receipt=tx_receipt, tx_hash=tx_hash.hex(), event_logs=event_logs, record_details=record_details, ipfs_cid=ipfs_cid, ipfs_source=ipfs_source, ipfs_gateway_url=IPFS_GATEWAY_URL, is_binary=is_binary)
         elif  request.form.get('action5') == 'VALUE5':
             isCard  = True
             unique_id = form.delete_record.data
-            unique_id = unique_id.lower()
+            unique_id = unique_id.strip().lower()
+            if not Web3.is_address(unique_id):
+                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result="Error: Invalid Record ID format. Please enter a valid Ethereum address.", tx_hash="")
             unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit deleted patient medical records."
 
