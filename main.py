@@ -19,6 +19,7 @@ from urllib.parse import quote
 import requests
 
 from web3 import Web3
+from web3.exceptions import ContractLogicError
 import json
 
 # install ganache using https://www.trufflesuite.com/ganache
@@ -98,6 +99,52 @@ def check_blockchain_connection():
         return None
     except Exception as e:
         return f"Error checking blockchain connection: {str(e)}. Please ensure Ganache is running."
+
+def _tx_error(e):
+    """Return a structured flash_error dict based on the exception type."""
+    err = str(e)
+    if isinstance(e, ContractLogicError) or 'execution reverted' in err or 'revert' in err.lower():
+        return {
+            'title': 'Smart Contract Rejected the Transaction',
+            'why': (
+                'The Ethereum contract reverted the transaction. '
+                'Most common causes:\n'
+                '1. Ganache was restarted since you registered — the contract no longer exists at that address.\n'
+                '2. Your wallet address is not the authorized owner/caller of this contract.\n'
+                '3. The contract\'s internal conditions were not met (e.g. a visit already exists, '
+                'or you are not on the allowed-doctors list).'
+            ),
+            'fix': (
+                'If Ganache was restarted: re-register via Patient Signup to deploy a fresh contract '
+                'and use the new contract address.\n'
+                'If Ganache is still running with the same state: verify you are logged in with the '
+                'exact account that owns this contract, then try again.'
+            ),
+        }
+    if 'InvalidAddress' in type(e).__name__ or 'is not a valid' in err:
+        return {
+            'title': 'Invalid Blockchain Address',
+            'why': 'The address you entered is not a valid Ethereum address.',
+            'fix': "Addresses must start with '0x' and be exactly 42 characters long. Copy it directly from Ganache or the registration page.",
+        }
+    if 'ConnectionRefused' in err or 'not connected' in err.lower() or 'RemoteDisconnected' in err:
+        return {
+            'title': 'Cannot Reach Ganache',
+            'why': 'The app cannot connect to the local Ganache blockchain at http://127.0.0.1:7545.',
+            'fix': 'Start Ganache (GUI or run: ganache-cli --host 127.0.0.1 --port 7545) and refresh the page.',
+        }
+    if 'ParserError' in type(e).__name__ or 'Unknown string format' in err:
+        return {
+            'title': 'Invalid Date Format',
+            'why': f'Could not parse the date you entered: "{err[:80]}".',
+            'fix': 'Enter the date as MM/DD/YYYY HH:MM — for example: 05/15/2026 09:00',
+        }
+    return {
+        'title': 'Transaction Failed',
+        'why': err[:400],
+        'fix': 'Check that Ganache is running on port 7545 and your account has sufficient ETH for gas. Then try again.',
+    }
+
 # Encryption of authorization data
 # Generate once use all time
 #enc_key = Fernet.generate_key()
@@ -389,10 +436,15 @@ def patientdash():
             contract = web3.eth.contract(address = contract_address, abi = abi)
             # assign default address
             web3.eth.default_account = account_address
-            date_obj = parser.parse(form.start_visit.data)
-            date_epoch = date_obj.timestamp()
-            tx_hash  = contract.functions.start_visit(int(date_epoch)).transact()
-            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            try:
+                date_obj   = parser.parse(form.start_visit.data)
+                date_epoch = date_obj.timestamp()
+                tx_hash    = contract.functions.start_visit(int(date_epoch)).transact()
+                tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            except Exception as e:
+                return render_template("patient.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error=_tx_error(e))
             event_logs = contract.events.event_start_visit.get_logs()
             qr_code = "https://api.qrserver.com/v1/create-qr-code/?data="+quote(str(event_logs[0]['args']['record_unique_id']))+"&size=150x150"
 #             changes = filter.get_new_entries()
@@ -420,19 +472,18 @@ def patientdash():
             ################## Solidity Transaction ###################
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
-            # assign default address
             web3.eth.default_account = account_address
-            tx_hash  = contract.functions.addDoctors(dr_id).transact()
-            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            try:
+                tx_hash    = contract.functions.addDoctors(dr_id).transact()
+                tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            except Exception as e:
+                return render_template("patient.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error=_tx_error(e))
             event_logs = contract.events.event_add_doctor.get_logs()
-#             changes = filter.get_new_entries()
-            print("--------------------changes-------------")
             print(event_logs[0]['args']['return_msg'])
-            print("--------------------end changes-------------")
-#             print(tx_receipt)
-#             contract.functions.record_mapping()
             ################## End Solidity TRansaction ###############
-            return render_template("patient.html", form=form, isCard  = isCard, username=account_address,contract_address=contract_address, result=result, tx_receipt = tx_receipt, tx_hash=tx_hash.hex(), event_logs = event_logs)
+            return render_template("patient.html", form=form, isCard=isCard, username=account_address, contract_address=contract_address, result=result, tx_receipt=tx_receipt, tx_hash=tx_hash.hex(), event_logs=event_logs)
         elif  request.form.get('action3') == 'VALUE3':
             isCard  = True
             dr_id = form.remove_doctors.data
@@ -441,19 +492,18 @@ def patientdash():
             ################## Solidity Transaction ###################
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
-            # assign default address
             web3.eth.default_account = account_address
-            tx_hash  = contract.functions.removeDoctors(dr_id).transact()
-            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            try:
+                tx_hash    = contract.functions.removeDoctors(dr_id).transact()
+                tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            except Exception as e:
+                return render_template("patient.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error=_tx_error(e))
             event_logs = contract.events.event_remove_doctor.get_logs()
-#             changes = filter.get_new_entries()
-            print("--------------------changes-------------")
             print(event_logs)
-            print("--------------------end changes-------------")
-#             print(tx_receipt)
-#             contract.functions.record_mapping()
             ################## End Solidity TRansaction ###############
-            return render_template("patient.html", form=form, isCard  = isCard, username=account_address,contract_address=contract_address, result=result, tx_receipt = tx_receipt, tx_hash=tx_hash.hex(), event_logs = event_logs)
+            return render_template("patient.html", form=form, isCard=isCard, username=account_address, contract_address=contract_address, result=result, tx_receipt=tx_receipt, tx_hash=tx_hash.hex(), event_logs=event_logs)
         elif  request.form.get('action4') == 'VALUE4':
             isCard  = True
             audit_id = form.add_audits.data
@@ -462,18 +512,18 @@ def patientdash():
             ################## Solidity Transaction ###################
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
-            # assign default address
             web3.eth.default_account = account_address
-            tx_hash  = contract.functions.addAudit(audit_id).transact()
-            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            try:
+                tx_hash    = contract.functions.addAudit(audit_id).transact()
+                tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            except Exception as e:
+                return render_template("patient.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error=_tx_error(e))
             event_logs = contract.events.event_add_audit.get_logs()
-
-            print("--------------------changes-------------")
             print(event_logs)
-            print("--------------------end changes-------------")
-
             ################## End Solidity TRansaction ###############
-            return render_template("patient.html", form=form, isCard  = isCard, username=account_address,contract_address=contract_address, result=result, tx_receipt = tx_receipt, tx_hash=tx_hash.hex(), event_logs = event_logs)
+            return render_template("patient.html", form=form, isCard=isCard, username=account_address, contract_address=contract_address, result=result, tx_receipt=tx_receipt, tx_hash=tx_hash.hex(), event_logs=event_logs)
 
         elif  request.form.get('action5') == 'VALUE5':
             isCard  = True
@@ -483,18 +533,18 @@ def patientdash():
             ################## Solidity Transaction ###################
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
-            # assign default address
             web3.eth.default_account = account_address
-            tx_hash  = contract.functions.removeAudit(audit_id).transact()
-            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            try:
+                tx_hash    = contract.functions.removeAudit(audit_id).transact()
+                tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            except Exception as e:
+                return render_template("patient.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error=_tx_error(e))
             event_logs = contract.events.event_remove_audit.get_logs()
-
-            print("--------------------changes-------------")
             print(event_logs)
-            print("--------------------end changes-------------")
-
             ################## End Solidity TRansaction ###############
-            return render_template("patient.html", form=form, isCard  = isCard, username=account_address,contract_address=contract_address, result=result, tx_receipt = tx_receipt, tx_hash=tx_hash.hex(), event_logs = event_logs)
+            return render_template("patient.html", form=form, isCard=isCard, username=account_address, contract_address=contract_address, result=result, tx_receipt=tx_receipt, tx_hash=tx_hash.hex(), event_logs=event_logs)
 
 
         elif  request.form.get('action6') == 'VALUE6':
@@ -509,26 +559,26 @@ def patientdash():
             ################## Solidity Transaction ###################
             #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
-            # assign default address
             web3.eth.default_account = account_address
-            tx_hash  = contract.functions.print_record(unique_id).transact()
-            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            try:
+                tx_hash    = contract.functions.print_record(unique_id).transact()
+                tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            except Exception as e:
+                return render_template("patient.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error=_tx_error(e))
             event_logs = contract.events.event_patient_print.get_logs()
-            print("--------------------changes-------------")
             print(event_logs)
-            print("--------------------end changes-------------")
 
-            # get medical record details
             try:
                 raw_record = contract.functions.get_record_details(unique_id).call()
                 record_details, ipfs_source, is_binary, ipfs_cid = fetch_from_ipfs(raw_record)
             except Exception as e:
-                print(f"Contract call failed: {e}")
-                record_details = "Error: Could not retrieve record. It may not exist or you may not have permission."
+                record_details = None
                 ipfs_cid = None
                 ipfs_source = None
                 is_binary = False
-            
+
             return render_template("patient.html", form=form, isCard=isCard, username=account_address, contract_address=contract_address, result=result, tx_receipt=tx_receipt, tx_hash=tx_hash.hex(), event_logs=event_logs, record_details=record_details, ipfs_cid=ipfs_cid, ipfs_source=ipfs_source, ipfs_gateway_url=IPFS_GATEWAY_URL, is_binary=is_binary)
 
         elif  request.form.get('action7') == 'VALUE7':
@@ -536,24 +586,24 @@ def patientdash():
             unique_id = form.delete_record.data
             unique_id = unique_id.strip().lower()
             if not Web3.is_address(unique_id):
-                return render_template("patient.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result="Error: Invalid Record ID format. Please enter a valid Ethereum address.", tx_hash="")
+                return render_template("patient.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error={'title': 'Invalid Record ID', 'why': 'The value you entered is not a valid Ethereum address.', 'fix': "Record IDs start with '0x' and are 42 characters long. Copy it from the QR code or your registration page."})
             unique_id = Web3.to_checksum_address(unique_id)
             result = "Patient deleted their medical record."
 
-            ################## Solidity Transaction ###################
-            #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
-            # assign default address
             web3.eth.default_account = account_address
-            tx_hash  = contract.functions.delete_record(unique_id).transact()
-            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            try:
+                tx_hash    = contract.functions.delete_record(unique_id).transact()
+                tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            except Exception as e:
+                return render_template("patient.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error=_tx_error(e))
             event_logs = contract.events.event_patient_delete.get_logs()
-            print("--------------------changes-------------")
             print(event_logs)
-            print("--------------------end changes-------------")
-
-            ################## End Solidity TRansaction ###############
-            return render_template("patient.html", form=form, isCard  = isCard, username=account_address,contract_address=contract_address, result=result, tx_receipt = tx_receipt, tx_hash=tx_hash.hex(), event_logs = event_logs)
+            return render_template("patient.html", form=form, isCard=isCard, username=account_address, contract_address=contract_address, result=result, tx_receipt=tx_receipt, tx_hash=tx_hash.hex(), event_logs=event_logs)
         else:
             pass # unknown
     return render_template('patient.html', form=form, isCard  = isCard, username=account_address,contract_address=contract_address )
@@ -577,21 +627,21 @@ def auditdash():
             unique_id = form.print_record.data
             unique_id = unique_id.strip().lower()
             if not Web3.is_address(unique_id):
-                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result="Error: Invalid Record ID format. Please enter a valid Ethereum address.", tx_hash="")
+                return render_template("audit.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error={'title': 'Invalid Record ID', 'why': 'The value entered is not a valid Ethereum address.', 'fix': "Record IDs start with '0x' and are 42 characters long. Copy it from the patient's QR code."})
             unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit printed patient medical records."
 
-            ################## Solidity Transaction ###################
-            #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
-            # assign default address
             web3.eth.default_account = account_address
             try:
-                tx_hash  = contract.functions.doctor_print_record(unique_id).transact()
+                tx_hash    = contract.functions.doctor_print_record(unique_id).transact()
                 tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
             except Exception as e:
-                print(f"Transaction failed: {e}")
-                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result=f"Error: Transaction failed. {e}")
+                return render_template("audit.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error=_tx_error(e))
             
             event_logs = contract.events.event_doctor_print.get_logs()
             print("--------------------changes-------------")
@@ -616,7 +666,9 @@ def auditdash():
             unique_id = form.update_record_id.data
             unique_id = unique_id.strip().lower()
             if not Web3.is_address(unique_id):
-                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result="Error: Invalid Record ID format. Please enter a valid Ethereum address.")
+                return render_template("audit.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error={'title': 'Invalid Record ID', 'why': 'The value entered is not a valid Ethereum address.', 'fix': "Record IDs start with '0x' and are 42 characters long. Copy it from the patient's QR code."})
             unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit updated patient medical records."
             new_record = form.update_record_rec.data
@@ -643,11 +695,12 @@ def auditdash():
             print(f"DEBUG: Saving to Blockchain: '{record_to_store}'")
 
             try:
-                tx_hash  = contract.functions.doctor_update_record(unique_id, record_to_store).transact()
+                tx_hash    = contract.functions.doctor_update_record(unique_id, record_to_store).transact()
                 tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
             except Exception as e:
-                print(f"Transaction failed: {e}")
-                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result=f"Error: Transaction failed. {e}", tx_hash="")
+                return render_template("audit.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error=_tx_error(e))
             
             event_logs = contract.events.event_doctor_update.get_logs()
             print("--------------------changes-------------")
@@ -692,21 +745,21 @@ def auditdash():
             unique_id = form.query.data
             unique_id = unique_id.strip().lower()
             if not Web3.is_address(unique_id):
-                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result="Error: Invalid Record ID format. Please enter a valid Ethereum address.", tx_hash="")
+                return render_template("audit.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error={'title': 'Invalid Record ID', 'why': 'The value entered is not a valid Ethereum address.', 'fix': "Record IDs start with '0x' and are 42 characters long. Copy it from the patient's QR code."})
             unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit queried one of the patient medical records."
 
-            ################## Solidity Transaction ###################
-            #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
-            # assign default address
             web3.eth.default_account = account_address
             try:
-                tx_hash  = contract.functions.doctor_query_record(unique_id).transact()
+                tx_hash    = contract.functions.doctor_query_record(unique_id).transact()
                 tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
             except Exception as e:
-                print(f"Transaction failed: {e}")
-                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result=f"Error: Transaction failed. {e}", tx_hash="")
+                return render_template("audit.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error=_tx_error(e))
             
             event_logs = contract.events.event_doctor_query.get_logs()
             print("--------------------changes-------------")
@@ -744,21 +797,21 @@ def auditdash():
             unique_id = form.copy_record.data
             unique_id = unique_id.strip().lower()
             if not Web3.is_address(unique_id):
-                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result="Error: Invalid Record ID format. Please enter a valid Ethereum address.", tx_hash="")
+                return render_template("audit.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error={'title': 'Invalid Record ID', 'why': 'The value entered is not a valid Ethereum address.', 'fix': "Record IDs start with '0x' and are 42 characters long."})
             unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit copied patient medical records."
 
-            ################## Solidity Transaction ###################
-            #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
-            # assign default address
             web3.eth.default_account = account_address
             try:
-                tx_hash  = contract.functions.doctor_copy_record(unique_id).transact()
+                tx_hash    = contract.functions.doctor_copy_record(unique_id).transact()
                 tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
             except Exception as e:
-                print(f"Transaction failed: {e}")
-                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result=f"Error: Transaction failed. {e}", tx_hash="")
+                return render_template("audit.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error=_tx_error(e))
             
             event_logs = contract.events.event_doctor_copy.get_logs()
             print("--------------------changes-------------")
@@ -783,28 +836,56 @@ def auditdash():
             unique_id = form.delete_record.data
             unique_id = unique_id.strip().lower()
             if not Web3.is_address(unique_id):
-                return render_template("audit.html", form=form, isCard=True, username=account_address, contract_address=contract_address, result="Error: Invalid Record ID format. Please enter a valid Ethereum address.", tx_hash="")
+                return render_template("audit.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error={'title': 'Invalid Record ID', 'why': 'The value entered is not a valid Ethereum address.', 'fix': "Record IDs start with '0x' and are 42 characters long."})
             unique_id = Web3.to_checksum_address(unique_id)
             result = "Audit deleted patient medical records."
 
-            ################## Solidity Transaction ###################
-            #find deployed contract
             contract = web3.eth.contract(address = contract_address, abi = abi)
-            # assign default address
             web3.eth.default_account = account_address
-            tx_hash  = contract.functions.doctor_delete_record(unique_id).transact()
-            tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            try:
+                tx_hash    = contract.functions.doctor_delete_record(unique_id).transact()
+                tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+            except Exception as e:
+                return render_template("audit.html", form=form, isCard=False,
+                    username=account_address, contract_address=contract_address,
+                    flash_error=_tx_error(e))
             event_logs = contract.events.event_doctor_delete.get_logs()
-            print("--------------------changes-------------")
             print(event_logs)
-            print("--------------------end changes-------------")
-
-            ################## End Solidity TRansaction ###############
-            return render_template("audit.html", form=form, isCard  = isCard, username=account_address,contract_address=contract_address, result=result, tx_receipt = tx_receipt, tx_hash=tx_hash.hex(), event_logs = event_logs)
+            return render_template("audit.html", form=form, isCard=isCard, username=account_address, contract_address=contract_address, result=result, tx_receipt=tx_receipt, tx_hash=tx_hash.hex(), event_logs=event_logs)
 
         else:
             pass # unknown
     return render_template('audit.html', form=form, username=account_address, contract_address=contract_address)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AI ASSISTANT ROUTES
+# ─────────────────────────────────────────────────────────────────────────────
+from flask import jsonify as _jsonify
+from federated.ai_assistant import analyze_symptoms, analyze_vitals, get_recommendations, COMMON_SYMPTOMS
+
+@app.route('/ai/symptoms', methods=['POST'])
+@csrf.exempt
+def ai_symptoms():
+    data = request.get_json(silent=True) or {}
+    result = analyze_symptoms(data.get('symptoms', ''))
+    return _jsonify(result)
+
+@app.route('/ai/vitals-analysis', methods=['POST'])
+@csrf.exempt
+def ai_vitals_analysis():
+    data       = request.get_json(silent=True) or {}
+    prediction = int(data.pop('prediction', 0))
+    probability= float(data.pop('probability', 0))
+    vitals_out = analyze_vitals(data)
+    recs       = get_recommendations(prediction, probability, data)
+    return _jsonify({'vitals': vitals_out, 'recommendations': recs})
+
+@app.route('/ai/symptoms-list', methods=['GET'])
+def ai_symptoms_list():
+    return _jsonify({'symptoms': COMMON_SYMPTOMS})
 
 
 if __name__ == '__main__':

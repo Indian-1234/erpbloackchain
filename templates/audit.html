@@ -9,544 +9,727 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root {
-      --bg:      #07111E;
-      --sidebar: #09152A;
-      --card:    #0F1E35;
-      --card2:   #122040;
-      --border:  rgba(255,255,255,0.07);
-      --blue:    #3B82F6;
-      --emerald: #10B981;
-      --purple:  #8B5CF6;
-      --amber:   #F59E0B;
-      --red:     #EF4444;
-      --cyan:    #06B6D4;
-      --text:    #E2E8F0;
-      --muted:   #64748B;
-    }
-    * { box-sizing:border-box; }
-    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; }
-    .hfont { font-family:'Space Grotesk',sans-serif; }
+    :root{--bg:#07111E;--sb:#08152A;--card:#0F1E35;--card2:#142240;--border:rgba(255,255,255,0.07);--blue:#3B82F6;--em:#10B981;--pur:#8B5CF6;--amb:#F59E0B;--red:#EF4444;--cy:#06B6D4;--tx:#E2E8F0;--mu:#64748B;}
+    *{box-sizing:border-box;}
+    body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;margin:0;}
+    .hf{font-family:'Space Grotesk',sans-serif;}
 
     /* Sidebar */
-    .sidebar { background:var(--sidebar); border-right:1px solid var(--border); width:240px; flex-shrink:0; }
-    .nav-item { display:flex; align-items:center; gap:.75rem; padding:.625rem .875rem; border-radius:10px; font-size:.8125rem; font-weight:500; color:#64748B; transition:all .15s; text-decoration:none; }
-    .nav-item:hover { color:#E2E8F0; background:rgba(255,255,255,.04); }
-    .nav-item.active { color:var(--blue); background:rgba(59,130,246,.1); }
-    .nav-item .icon { width:18px; text-align:center; }
+    .sb{width:56px;flex-shrink:0;background:var(--sb);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:0;position:sticky;top:0;height:100vh;overflow:hidden;transition:width .25s;}
+    .sb.open{width:220px;}
+    .sb .logo{width:100%;padding:14px 0;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border);}
+    .sb.open .logo{padding:14px 16px;justify-content:flex-start;gap:10px;}
+    .logo-icon{width:32px;height:32px;border-radius:8px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .sb .logo-text{display:none;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.05rem;color:#fff;white-space:nowrap;}
+    .sb.open .logo-text{display:block;}
+    .sb nav{flex:1;width:100%;padding:8px 0;}
+    .ni{display:flex;align-items:center;padding:10px 0;justify-content:center;color:#475569;cursor:pointer;transition:all .15s;text-decoration:none;position:relative;width:100%;}
+    .sb.open .ni{padding:10px 14px;justify-content:flex-start;gap:12px;border-radius:10px;margin:1px 6px;width:calc(100% - 12px);}
+    .ni .ic{width:20px;text-align:center;font-size:.95rem;flex-shrink:0;}
+    .ni .lbl{display:none;font-size:.8125rem;font-weight:500;white-space:nowrap;}
+    .sb.open .ni .lbl{display:block;}
+    .ni:hover{color:#E2E8F0;background:rgba(255,255,255,.04);}
+    .ni.act{color:var(--blue);background:rgba(59,130,246,.1);}
+    .sb-foot{width:100%;padding:8px 0;border-top:1px solid var(--border);}
+    .sb-toggle{position:absolute;top:50%;right:-12px;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--card2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mu);font-size:.6rem;z-index:10;transition:all .2s;}
+    .sb-toggle:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+    /* Main */
+    .main{flex:1;display:flex;flex-direction:column;min-height:100vh;overflow:hidden;}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:58px;border-bottom:1px solid var(--border);background:rgba(7,17,30,.97);backdrop-filter:blur(12px);position:sticky;top:0;z-index:20;flex-shrink:0;}
+
+    /* Tabs */
+    .tabs{display:flex;gap:4px;padding:12px 24px 0;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;}
+    .tab{padding:8px 16px 10px;font-size:.8rem;font-weight:600;font-family:'Space Grotesk',sans-serif;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;display:flex;align-items:center;gap:6px;border-radius:0;background:none;border-top:none;border-left:none;border-right:none;}
+    .tab:hover{color:var(--tx);}
+    .tab.on{color:var(--blue);border-bottom-color:var(--blue);}
+
+    /* Content */
+    .content{display:flex;flex:1;overflow:hidden;}
+    .pane{flex:1;overflow-y:auto;padding:20px 24px;}
+    .pane.hidden{display:none!important;}
+
+    /* Stats */
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+    .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+    .stat-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.9rem;}
+    .stat-val{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.1rem;color:#F1F5F9;}
+    .stat-lbl{font-size:.72rem;color:var(--mu);margin-top:2px;}
+
+    /* 2-col grid */
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .g2.gap-sm{gap:10px;}
+    .span2{grid-column:1/-1;}
 
     /* Cards */
-    .section-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; margin-bottom:1.25rem; }
-    .section-card.accent-blue { border-left:3px solid var(--blue); }
-    .section-card.accent-emerald { border-left:3px solid var(--emerald); }
-    .section-card.accent-amber { border-left:3px solid var(--amber); }
-    .section-card.accent-red { border-left:3px solid var(--red); }
-    .section-card.accent-purple { border-left:3px solid var(--purple); }
-    .section-card.accent-cyan { border-left:3px solid var(--cyan); }
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;}
+    .card.bl{border-left:3px solid var(--blue);}
+    .card.gem{border-left:3px solid var(--em);}
+    .card.gam{border-left:3px solid var(--amb);}
+    .card.grd{border-left:3px solid var(--red);}
+    .card.gpu{border-left:3px solid var(--pur);}
+    .card.gcy{border-left:3px solid var(--cy);}
 
-    /* Section header */
-    .sec-header { display:flex; align-items:center; gap:.875rem; margin-bottom:1.25rem; }
-    .sec-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    .sec-title { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1rem; color:#F1F5F9; }
-    .sec-sub { font-size:.75rem; color:var(--muted); margin-top:.125rem; }
+    .ch{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+    .ci{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.85rem;}
+    .ct{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:.9rem;color:#F1F5F9;}
+    .cs{font-size:.72rem;color:var(--mu);margin-top:1px;}
 
     /* Form elements */
-    .field-label { font-size:.8rem; font-weight:500; color:#94A3B8; display:block; margin-bottom:.375rem; }
-    .input-field { width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:9px; padding:10px 14px; color:var(--text); outline:none; transition:all .2s; font-size:.875rem; font-family:'Inter',sans-serif; }
-    .input-field::placeholder { color:rgba(255,255,255,0.2); }
-    .input-field:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(59,130,246,.12); }
-    textarea.input-field { min-height:120px; resize:vertical; }
-    select.input-field { cursor:pointer; }
-
-    /* Hide WTForms labels */
-    .nolabel label, .nolabel .help-block { display:none !important; }
-    .nolabel input, .nolabel textarea { background:rgba(255,255,255,0.04)!important; border:1px solid rgba(255,255,255,0.09)!important; border-radius:9px!important; padding:10px 14px!important; color:var(--text)!important; width:100%!important; outline:none!important; font-family:'Inter',sans-serif!important; font-size:.875rem!important; }
+    .lbl{font-size:.78rem;font-weight:500;color:#94A3B8;display:block;margin-bottom:.35rem;}
+    .inp{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:9px 12px;color:var(--tx);outline:none;transition:all .2s;font-size:.8125rem;font-family:'Inter',sans-serif;}
+    .inp::placeholder{color:rgba(255,255,255,.18);}
+    .inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+    textarea.inp{min-height:90px;resize:vertical;}
+    select.inp{cursor:pointer;}
+    .nolabel label,.nolabel .help-block{display:none!important;}
+    .nolabel input,.nolabel textarea{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:9px!important;padding:9px 12px!important;color:var(--tx)!important;width:100%!important;outline:none!important;font-family:'Inter',sans-serif!important;font-size:.8125rem!important;}
 
     /* Buttons */
-    .btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.625rem 1.25rem; border-radius:9px; font-size:.8125rem; font-weight:600; font-family:'Space Grotesk',sans-serif; transition:all .18s; cursor:pointer; border:none; }
-    .btn-blue  { background:var(--blue);    color:#fff; }
-    .btn-blue:hover  { background:#2563EB; }
-    .btn-green { background:var(--emerald); color:#fff; }
-    .btn-green:hover { background:#059669; }
-    .btn-amber { background:var(--amber);   color:#0A0F1E; }
-    .btn-amber:hover { background:#D97706; }
-    .btn-red   { background:rgba(239,68,68,.1); color:var(--red); border:1px solid rgba(239,68,68,.25); }
-    .btn-red:hover { background:rgba(239,68,68,.2); }
-    .btn-purple { background:rgba(139,92,246,.14); color:var(--purple); border:1px solid rgba(139,92,246,.3); }
-    .btn-purple:hover { background:rgba(139,92,246,.22); }
-    .btn-ghost  { background:rgba(255,255,255,.04); color:var(--amber); border:1px solid rgba(255,184,48,.25); }
-    .btn-ghost:hover { background:rgba(255,255,255,.07); }
-    .btn-full { width:100%; }
-    .btn:disabled { opacity:.5; cursor:not-allowed; }
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.55rem 1.1rem;border-radius:9px;font-size:.8rem;font-weight:600;font-family:'Space Grotesk',sans-serif;transition:all .17s;cursor:pointer;border:none;white-space:nowrap;}
+    .btn.fw{width:100%;}
+    .bb{background:var(--blue);color:#fff;} .bb:hover{background:#2563EB;}
+    .be{background:var(--em);color:#fff;} .be:hover{background:#059669;}
+    .ba{background:var(--amb);color:#0A0F1E;} .ba:hover{background:#D97706;}
+    .bp{background:rgba(139,92,246,.14);color:var(--pur);border:1px solid rgba(139,92,246,.3);} .bp:hover{background:rgba(139,92,246,.22);}
+    .br{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.22);} .br:hover{background:rgba(239,68,68,.18);}
+    .bc{background:var(--cy);color:#fff;} .bc:hover{background:#0891B2;}
+    .bg_{background:rgba(255,255,255,.04);color:var(--tx);border:1px solid var(--border);} .bg_:hover{background:rgba(255,255,255,.07);}
+    .btn:disabled{opacity:.5;cursor:not-allowed;}
 
-    /* Result panel */
-    .result-panel { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.25rem; }
-    .result-row { background:rgba(255,255,255,.025); border:1px solid var(--border); border-radius:9px; padding:.75rem 1rem; margin-bottom:.625rem; }
-    .result-label { font-size:.7rem; color:var(--muted); margin-bottom:.25rem; text-transform:uppercase; letter-spacing:.05em; }
-    .result-val { font-size:.8rem; color:var(--text); word-break:break-all; }
+    /* Badges */
+    .bge{display:inline-flex;align-items:center;gap:.3rem;font-size:.67rem;padding:.2rem .55rem;border-radius:100px;background:rgba(16,185,129,.1);color:var(--em);border:1px solid rgba(16,185,129,.2);}
+    .bgb{display:inline-flex;align-items:center;gap:.3rem;font-size:.67rem;padding:.2rem .55rem;border-radius:100px;background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2);}
+    .bgp{display:inline-flex;align-items:center;gap:.3rem;font-size:.67rem;padding:.2rem .55rem;border-radius:100px;background:rgba(139,92,246,.1);color:var(--pur);border:1px solid rgba(139,92,246,.2);}
+    .bga{display:inline-flex;align-items:center;gap:.3rem;font-size:.67rem;padding:.2rem .55rem;border-radius:100px;background:rgba(245,158,11,.1);color:var(--amb);border:1px solid rgba(245,158,11,.2);}
+    .dp{width:6px;height:6px;border-radius:50%;animation:dp 2s infinite;}
+    @keyframes dp{0%,100%{opacity:1}50%{opacity:.3}}
 
-    /* Status badges */
-    .badge-green { display:inline-flex; align-items:center; gap:.35rem; font-size:.7rem; padding:.25rem .625rem; border-radius:100px; background:rgba(16,185,129,.1); color:var(--emerald); border:1px solid rgba(16,185,129,.2); }
-    .badge-amber { display:inline-flex; align-items:center; gap:.35rem; font-size:.7rem; padding:.25rem .625rem; border-radius:100px; background:rgba(245,158,11,.1); color:var(--amber); border:1px solid rgba(245,158,11,.2); }
-    .badge-blue  { display:inline-flex; align-items:center; gap:.35rem; font-size:.7rem; padding:.25rem .625rem; border-radius:100px; background:rgba(59,130,246,.1);  color:var(--blue);  border:1px solid rgba(59,130,246,.2); }
-    .badge-purple{ display:inline-flex; align-items:center; gap:.35rem; font-size:.7rem; padding:.25rem .625rem; border-radius:100px; background:rgba(139,92,246,.1); color:var(--purple);border:1px solid rgba(139,92,246,.2); }
-    .dot-pulse   { width:6px; height:6px; border-radius:50%; animation:dotpulse 2s infinite; }
-    @keyframes dotpulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    /* Results panel */
+    .rp{width:300px;flex-shrink:0;border-left:1px solid var(--border);background:var(--sb);overflow-y:auto;padding:16px;}
+    .rrow{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin-bottom:8px;}
+    .rlbl{font-size:.67rem;color:var(--mu);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
+    .rval{font-size:.78rem;color:var(--tx);word-break:break-all;}
 
-    ::-webkit-scrollbar { width:5px; }
-    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.07); border-radius:3px; }
+    /* FL progress bar */
+    .progress-wrap{background:rgba(255,255,255,.06);border-radius:3px;height:6px;overflow:hidden;}
+    .progress-bar{height:100%;border-radius:3px;transition:width .5s;}
 
-    @keyframes slideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-    .anim { animation:slideUp .4s ease forwards; }
+    ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px;}
   </style>
 </head>
-<body class="flex min-h-screen antialiased">
+<body class="flex min-h-screen antialiased" data-has-result="{{ 'true' if isCard else 'false' }}" data-has-df="{{ 'true' if isDF else 'false' }}">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar hidden lg:flex flex-col sticky top-0 h-screen overflow-y-auto">
-    <!-- Logo -->
-    <div class="px-5 py-5" style="border-bottom:1px solid var(--border)">
-      <a href="/" class="flex items-center gap-2 hfont font-bold text-base">
-        <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:var(--blue)">
-          <i class="fa-solid fa-heart-pulse text-white text-xs"></i>
-        </div>
-        <span class="text-white">EHR<span style="color:var(--blue)">Chain</span></span>
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sb" id="sidebar">
+    <div class="sb-toggle" onclick="toggleSidebar()" id="sb-toggle" title="Expand sidebar">
+      <i class="fa-solid fa-chevron-right" id="sb-arrow"></i>
+    </div>
+    <div class="logo">
+      <div class="logo-icon"><i class="fa-solid fa-heart-pulse text-white text-xs"></i></div>
+      <span class="logo-text">EHR<span style="color:var(--blue)">Chain</span></span>
+    </div>
+    <nav>
+      <a class="ni act" data-tab="overview" onclick="showTab('overview')" href="#">
+        <span class="ic"><i class="fa-solid fa-gauge-high"></i></span><span class="lbl">Overview</span>
       </a>
-    </div>
-
-    <!-- Doctor identity -->
-    <div class="px-5 py-5" style="border-bottom:1px solid var(--border)">
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center hfont font-bold text-white mb-2.5 text-sm" style="background:var(--blue)">Dr</div>
-      <p class="font-semibold text-white text-sm">Doctor / Auditor</p>
-      <p class="text-xs mt-0.5 font-mono break-all" style="color:var(--muted)">{{ username[:22] if username else '—' }}…</p>
-      <span class="badge-green mt-2"><span class="dot-pulse" style="background:var(--emerald)"></span>Verified Doctor</span>
-    </div>
-
-    <!-- Nav -->
-    <nav class="flex-1 px-3 py-4 space-y-0.5">
-      <a href="#" class="nav-item active"><span class="icon"><i class="fa-solid fa-gauge-high"></i></span> Dashboard</a>
-      <a href="#sec-connect" class="nav-item"><span class="icon"><i class="fa-solid fa-link"></i></span> Connect Patient</a>
-      <a href="#sec-update" class="nav-item"><span class="icon"><i class="fa-solid fa-pen-to-square"></i></span> Update Records</a>
-      <a href="#sec-read" class="nav-item"><span class="icon"><i class="fa-solid fa-magnifying-glass"></i></span> Read Records</a>
-      <a href="#sec-fl" class="nav-item"><span class="icon"><i class="fa-solid fa-brain"></i></span> Federated AI</a>
+      <a class="ni" data-tab="records" onclick="showTab('records')" href="#">
+        <span class="ic"><i class="fa-solid fa-folder-open"></i></span><span class="lbl">Records</span>
+      </a>
+      <a class="ni" data-tab="update" onclick="showTab('update')" href="#">
+        <span class="ic"><i class="fa-solid fa-pen-to-square"></i></span><span class="lbl">Update Record</span>
+      </a>
+      <a class="ni" data-tab="ai" onclick="showTab('ai')" href="#">
+        <span class="ic"><i class="fa-solid fa-brain"></i></span><span class="lbl">Federated AI</span>
+      </a>
     </nav>
-
-    <div class="px-3 pb-5">
-      <a href="/" class="nav-item"><span class="icon"><i class="fa-solid fa-right-from-bracket"></i></span> Log Out</a>
+    <div class="sb-foot">
+      <a href="/" class="ni">
+        <span class="ic"><i class="fa-solid fa-right-from-bracket"></i></span><span class="lbl">Log Out</span>
+      </a>
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
-  <div class="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+  <!-- ══ MAIN ══ -->
+  <div class="main">
 
     <!-- Top bar -->
-    <header class="flex items-center justify-between px-6 py-4 sticky top-0 z-20" style="background:rgba(7,17,30,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)">
-      <div>
-        <h1 class="hfont font-bold text-lg text-white">Doctor Dashboard</h1>
-        <p class="text-xs mt-0.5 font-mono" style="color:var(--muted)">{{ username }}</p>
-      </div>
+    <div class="topbar">
       <div class="flex items-center gap-3">
-        {% if contract_address and contract_address != "0" and contract_address != None %}
-        <span class="badge-green hidden sm:inline-flex">
-          <span class="dot-pulse" style="background:var(--emerald)"></span>
-          {{ contract_address[:14] }}…
-        </span>
-        {% endif %}
-        <a href="/" class="btn btn-ghost py-2 px-3" style="font-size:.8rem">
-          <i class="fa-solid fa-right-from-bracket"></i> Logout
-        </a>
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center hf font-bold text-white text-sm" style="background:var(--blue)">Dr</div>
+        <div>
+          <p class="hf font-bold text-white text-base leading-tight">Doctor Dashboard</p>
+          <p class="font-mono text-xs leading-tight" style="color:var(--mu)">{{ username[:32] if username else '—' }}</p>
+        </div>
       </div>
-    </header>
+      <div class="flex items-center gap-2">
+        {% if contract_address and contract_address != "0" and contract_address != None %}
+        <span class="bge hidden md:inline-flex"><span class="dp" style="background:var(--em)"></span>{{ contract_address[:12] }}…</span>
+        {% endif %}
+        <a href="/" class="btn bg_" style="font-size:.75rem;padding:.45rem .875rem"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+      </div>
+    </div>
 
-    <!-- Body -->
-    <div class="flex flex-1 overflow-y-auto">
+    <!-- Tab bar -->
+    <div class="tabs">
+      <button class="tab on" data-tab="overview" onclick="showTab('overview')"><i class="fa-solid fa-gauge-high"></i> Overview</button>
+      <button class="tab" data-tab="records" onclick="showTab('records')"><i class="fa-solid fa-folder-open"></i> Records</button>
+      <button class="tab" data-tab="update" onclick="showTab('update')"><i class="fa-solid fa-pen-to-square"></i> Update</button>
+      <button class="tab" data-tab="ai" onclick="showTab('ai')"><i class="fa-solid fa-brain"></i> Federated AI</button>
+    </div>
 
-      <!-- Forms column -->
-      <div class="flex-1 p-6 max-w-2xl">
+    <div class="content">
 
-        <!-- SECTION A: Connect Patient -->
-        <section id="sec-connect" class="section-card accent-blue anim">
-          <div class="sec-header">
-            <div class="sec-icon" style="background:rgba(59,130,246,.12)"><i class="fa-solid fa-link" style="color:var(--blue)"></i></div>
+      <!-- ══ PANE: OVERVIEW ══ -->
+      <div class="pane" id="pane-overview">
+
+        <!-- Stats -->
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-ico" style="background:rgba(59,130,246,.12)"><i class="fa-solid fa-link" style="color:var(--blue)"></i></div>
             <div>
-              <p class="sec-title">Connect to Patient Vault</p>
-              <p class="sec-sub">Links your session to the patient's smart contract</p>
+              {% if contract_address and contract_address != "0" and contract_address != None %}
+              <div class="stat-val" style="font-size:.85rem">{{ contract_address[:14] }}…</div>
+              <div class="stat-lbl"><span class="bge" style="font-size:.62rem"><span class="dp" style="background:var(--em)"></span>Patient Connected</span></div>
+              {% else %}
+              <div class="stat-val" style="color:var(--mu);font-size:.9rem">Not Connected</div>
+              <div class="stat-lbl">No patient vault linked</div>
+              {% endif %}
             </div>
           </div>
-          {% if contract_address and contract_address != "0" and contract_address != None %}
-          <div class="badge-green mb-4">
-            <i class="fa-solid fa-circle-check"></i>
-            Connected: <span class="font-mono ml-1">{{ contract_address }}</span>
-          </div>
-          {% endif %}
-          <form action="" method="post" role="form">
-            {{ form.csrf_token() }}
-            <div class="space-y-3">
-              <div>
-                <label for="contract_address_input" class="field-label">Patient Contract Address</label>
-                {{ form.contract_address(id="contract_address_input", class="input-field", placeholder="0x... patient contract address", **{"aria-label":"Patient Contract Address"}) }}
-              </div>
-              <button type="submit" name="action10" value="VALUE10" class="btn btn-blue" aria-label="Connect to Patient Vault">
-                <i class="fa-solid fa-link"></i> Connect to Patient Vault
-              </button>
+          <div class="stat" id="stat-fl">
+            <div class="stat-ico" style="background:rgba(139,92,246,.12)"><i class="fa-solid fa-brain" style="color:var(--pur)"></i></div>
+            <div>
+              <div class="stat-val" id="stat-fl-val" style="color:var(--pur)">—</div>
+              <div class="stat-lbl" id="stat-fl-lbl">FL Training Status</div>
             </div>
-          </form>
-        </section>
+          </div>
+          <div class="stat">
+            <div class="stat-ico" style="background:rgba(16,185,129,.1)"><i class="fa-brands fa-ethereum" style="color:var(--em)"></i></div>
+            <div>
+              <div class="stat-val" style="color:var(--em)">Ganache</div>
+              <div class="stat-lbl">Ethereum Network</div>
+            </div>
+          </div>
+        </div>
 
-        <!-- SECTION B: Print Record -->
-        <section class="section-card accent-cyan anim" style="animation-delay:.04s">
-          <div class="sec-header">
-            <div class="sec-icon" style="background:rgba(6,182,212,.12)"><i class="fa-solid fa-print" style="color:var(--cyan)"></i></div>
-            <p class="sec-title">Print Medical Record</p>
-          </div>
-          <form action="" method="post" role="form">
-            {{ form.csrf_token() }}
-            <div class="space-y-3">
-              <div>
-                <label for="print_record" class="field-label">Record ID</label>
-                {{ form.print_record(id="print_record", class="input-field", placeholder="0x... record ID", **{"aria-label":"Record ID to Print"}) }}
-              </div>
-              <button type="submit" name="action1" value="VALUE1" class="btn" style="background:var(--cyan);color:#fff" aria-label="Print Record">
-                <i class="fa-solid fa-print"></i> Print Record
-              </button>
+        <!-- Quick actions grid -->
+        <p class="hf font-semibold text-white mb-3 text-sm">Quick Actions</p>
+        <div class="g2">
+          <!-- Connect patient card -->
+          <div class="card bl">
+            <div class="ch">
+              <div class="ci" style="background:rgba(59,130,246,.12)"><i class="fa-solid fa-link" style="color:var(--blue)"></i></div>
+              <div><p class="ct">Connect Patient</p><p class="cs">Link to patient vault</p></div>
             </div>
-          </form>
-        </section>
-
-        <!-- SECTION C: Copy Record -->
-        <section class="section-card anim" style="animation-delay:.06s">
-          <div class="sec-header">
-            <div class="sec-icon" style="background:rgba(255,255,255,.06)"><i class="fa-solid fa-copy" style="color:#94A3B8"></i></div>
-            <p class="sec-title">Copy Medical Record</p>
-          </div>
-          <form action="" method="post" role="form">
-            {{ form.csrf_token() }}
-            <div class="space-y-3">
-              <div>
-                <label for="copy_record" class="field-label">Record ID</label>
-                {{ form.copy_record(id="copy_record", class="input-field", placeholder="0x... record ID", **{"aria-label":"Record ID to Copy"}) }}
-              </div>
-              <button type="submit" name="action4" value="VALUE4" class="btn" style="background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)" aria-label="Copy Record">
-                <i class="fa-solid fa-copy"></i> Copy Record
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <!-- SECTION D: Update Record -->
-        <section id="sec-update" class="section-card accent-emerald anim" style="animation-delay:.08s">
-          <div class="flex items-start justify-between mb-4">
-            <div class="sec-header" style="margin-bottom:0">
-              <div class="sec-icon" style="background:rgba(16,185,129,.12)"><i class="fa-solid fa-pen-to-square" style="color:var(--emerald)"></i></div>
-              <div>
-                <p class="sec-title">Update Medical Records</p>
-                <p class="sec-sub">Uploaded to IPFS → CID stored on blockchain</p>
-              </div>
-            </div>
-            <span class="badge-green shrink-0"><span class="dot-pulse" style="background:var(--emerald)"></span>IPFS + Chain</span>
-          </div>
-          <form action="" method="post" role="form" enctype="multipart/form-data">
-            {{ form.csrf_token() }}
-            <div class="space-y-4">
-              <div>
-                <label for="update_record_id" class="field-label">Record ID</label>
-                {{ form.update_record_id(id="update_record_id", class="input-field", placeholder="0x... record ID from patient QR", **{"aria-label":"Record ID to Update"}) }}
-              </div>
-              <div>
-                <label for="update_record_rec" class="field-label">Medical Notes / New Record</label>
-                {{ form.update_record_rec(id="update_record_rec", class="input-field", placeholder="Enter clinical notes, diagnosis, prescription…", **{"aria-label":"Medical Record Content"}) }}
-              </div>
-              <!-- IPFS file upload -->
-              <div class="p-3.5 rounded-xl" style="background:rgba(16,185,129,.04);border:1px dashed rgba(16,185,129,.25)">
-                <label class="field-label" style="color:var(--emerald);margin-bottom:.5rem">
-                  <i class="fa-solid fa-cloud-arrow-up mr-1"></i> Attach File to IPFS (optional)
-                </label>
-                <input type="file" name="ipfs_file" id="ipfs_file" accept="*/*" aria-label="Attach file for IPFS upload"
-                  class="block w-full text-sm file:mr-3 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:cursor-pointer file:bg-emerald-500/10 file:text-emerald-400"
-                  style="color:#64748B">
-                <p class="text-xs mt-1.5" style="color:var(--muted)">PDF, images, JSON, DICOM — up to 50MB. Overrides text field if provided.</p>
-              </div>
-              <!-- FL hospital selector -->
-              <div class="p-3.5 rounded-xl" style="background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.18)">
-                <label class="field-label" style="color:var(--purple);margin-bottom:.5rem">
-                  <i class="fa-solid fa-brain mr-1"></i> Your Hospital — AI trains automatically on save
-                </label>
-                <select name="fl_hospital" class="input-field" style="border-color:rgba(139,92,246,.2)" aria-label="Hospital for federated learning">
-                  <option value="Hospital_A">Hospital A — Cardiology Ward</option>
-                  <option value="Hospital_B">Hospital B — General Medicine</option>
-                  <option value="Hospital_C">Hospital C — High-Risk Unit</option>
-                </select>
-              </div>
-              <button type="submit" name="action2" value="VALUE2" id="btn-update" class="btn btn-green btn-full" aria-label="Upload to IPFS and Save to Blockchain">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Upload to IPFS &amp; Save to Blockchain
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <!-- SECTION E: Query Records -->
-        <section id="sec-read" class="section-card accent-amber anim" style="animation-delay:.10s">
-          <div class="sec-header">
-            <div class="sec-icon" style="background:rgba(245,158,11,.12)"><i class="fa-solid fa-magnifying-glass" style="color:var(--amber)"></i></div>
-            <p class="sec-title">Query Medical Records</p>
-          </div>
-          <form action="" method="post" role="form">
-            {{ form.csrf_token() }}
-            <div class="space-y-3">
-              <div>
-                <label for="query" class="field-label">Record ID (leave blank to list all)</label>
-                {{ form.query(id="query", class="input-field", placeholder="0x... record ID (optional)", **{"aria-label":"Record ID to Query"}) }}
-              </div>
-              <div class="flex gap-3">
-                <button type="submit" name="action3" value="VALUE3" class="btn btn-amber flex-1" aria-label="Query Record">
-                  <i class="fa-solid fa-magnifying-glass"></i> Query
-                </button>
-                <button type="submit" name="action30" value="VALUE30" class="btn btn-ghost flex-1" aria-label="List All IDs">
-                  <i class="fa-solid fa-list"></i> List All IDs
+            <form action="" method="post" role="form">
+              {{ form.csrf_token() }}
+              <div class="space-y-2">
+                <label class="lbl">Patient Contract Address</label>
+                {{ form.contract_address(class="inp", placeholder="0x... patient contract", **{"aria-label":"Patient Contract Address"}) }}
+                <button type="submit" name="action10" value="VALUE10" class="btn bb fw">
+                  <i class="fa-solid fa-link"></i> Connect
                 </button>
               </div>
-            </div>
-          </form>
-        </section>
-
-        <!-- SECTION F: Federated AI Training -->
-        <section id="sec-fl" class="section-card accent-purple anim" style="animation-delay:.12s">
-          <div class="flex items-start justify-between mb-4">
-            <div class="sec-header" style="margin-bottom:0">
-              <div class="sec-icon" style="background:rgba(139,92,246,.14)"><i class="fa-solid fa-brain" style="color:var(--purple)"></i></div>
-              <div>
-                <p class="sec-title">Federated AI Training</p>
-                <p class="sec-sub">Train local model — raw data never leaves this hospital</p>
-              </div>
-            </div>
-            <span class="badge-purple shrink-0"><span class="dot-pulse" style="background:var(--purple)"></span>AI + Chain</span>
+            </form>
           </div>
 
-          <!-- FL Network status -->
-          <div id="fl-status-panel" class="p-3.5 rounded-xl mb-4" style="background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.18)">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-medium" style="color:#C4B5FD">Network Status</span>
-              <button onclick="loadFLStatus()" class="btn btn-purple py-1 px-2.5" style="font-size:.7rem;min-width:0">
-                <i class="fa-solid fa-rotate-right"></i> Refresh
-              </button>
+          <!-- FL training status mini card -->
+          <div class="card gpu">
+            <div class="ch">
+              <div class="ci" style="background:rgba(139,92,246,.14)"><i class="fa-solid fa-network-wired" style="color:var(--pur)"></i></div>
+              <div><p class="ct">FL Network</p><p class="cs">Federated learning status</p></div>
             </div>
-            <div id="fl-round" class="text-xs" style="color:var(--muted)">Loading…</div>
-            <div id="fl-progress-bar-wrap" class="mt-3" style="display:none">
-              <div class="flex justify-between text-xs mb-1" style="color:var(--muted)">
-                <span>Training progress</span><span id="fl-pct">0%</span>
-              </div>
-              <div class="w-full h-1.5 rounded-full" style="background:rgba(255,255,255,.06)">
-                <div id="fl-progress-bar" class="h-1.5 rounded-full transition-all duration-500" style="background:var(--purple);width:0%"></div>
-              </div>
-              <div id="fl-trained-list" class="mt-2 flex flex-wrap gap-1.5"></div>
+            <div id="ov-fl-status" class="text-xs" style="color:var(--mu)">Loading…</div>
+            <div id="ov-fl-bar-wrap" class="mt-3" style="display:none">
+              <div class="flex justify-between text-xs mb-1" style="color:var(--mu)"><span id="ov-fl-round">Round —</span><span id="ov-fl-pct">0%</span></div>
+              <div class="progress-wrap"><div id="ov-fl-bar" class="progress-bar" style="background:var(--pur);width:0%"></div></div>
+              <div id="ov-fl-badges" class="mt-2 flex flex-wrap gap-1"></div>
             </div>
+            <button onclick="showTab('ai')" class="btn bp fw mt-3" style="font-size:.75rem">
+              <i class="fa-solid fa-brain"></i> Go to AI Training
+            </button>
           </div>
 
-          <!-- Controls -->
-          <div class="space-y-3">
-            <div>
-              <label for="fl-hospital-select" class="field-label">Your Hospital</label>
-              <select id="fl-hospital-select" class="input-field" aria-label="Select hospital for FL training">
+          <!-- Quick print -->
+          <div class="card gcy">
+            <div class="ch">
+              <div class="ci" style="background:rgba(6,182,212,.12)"><i class="fa-solid fa-print" style="color:var(--cy)"></i></div>
+              <div><p class="ct">Print Record</p><p class="cs">Read patient record</p></div>
+            </div>
+            <form action="" method="post" role="form">
+              {{ form.csrf_token() }}
+              <div class="space-y-2">
+                <label class="lbl">Record ID</label>
+                {{ form.print_record(class="inp", placeholder="0x... record ID", **{"aria-label":"Record ID to Print"}) }}
+                <button type="submit" name="action1" value="VALUE1" class="btn bc fw"><i class="fa-solid fa-print"></i> Print Record</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Quick query -->
+          <div class="card gam">
+            <div class="ch">
+              <div class="ci" style="background:rgba(245,158,11,.12)"><i class="fa-solid fa-magnifying-glass" style="color:var(--amb)"></i></div>
+              <div><p class="ct">Query Records</p><p class="cs">Search or list records</p></div>
+            </div>
+            <form action="" method="post" role="form">
+              {{ form.csrf_token() }}
+              <div class="space-y-2">
+                <label class="lbl">Record ID (blank = list all)</label>
+                {{ form.query(class="inp", placeholder="0x... or leave blank", **{"aria-label":"Record ID to Query"}) }}
+                <div class="flex gap-2">
+                  <button type="submit" name="action3" value="VALUE3" class="btn ba flex-1"><i class="fa-solid fa-search"></i> Query</button>
+                  <button type="submit" name="action30" value="VALUE30" class="btn bg_ flex-1" style="color:var(--amb);border-color:rgba(245,158,11,.25)"><i class="fa-solid fa-list"></i> All IDs</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ── Doctor AI Patient Analysis ────────────────────── -->
+        <div class="card" style="margin-top:12px;border-left:3px solid var(--pur)">
+          <div class="ch">
+            <div class="ci" style="background:rgba(139,92,246,.14)"><i class="fa-solid fa-robot" style="color:var(--pur)"></i></div>
+            <div><p class="ct">AI Patient Risk Analysis</p><p class="cs">Instant vitals assessment — no model required</p></div>
+            <span style="font-size:.65rem;padding:.2rem .5rem;border-radius:100px;background:rgba(139,92,246,.1);color:var(--pur);border:1px solid rgba(139,92,246,.25);flex-shrink:0">Live AI</span>
+          </div>
+          <div class="g2 gap-sm" style="margin-bottom:10px">
+            <div><label class="lbl" for="dr-age">Age</label><input type="number" id="dr-age" class="inp" value="45" min="18" max="95" placeholder="years"></div>
+            <div><label class="lbl" for="dr-sbp">Systolic BP</label><input type="number" id="dr-sbp" class="inp" value="135" min="80" max="200" placeholder="mmHg"></div>
+            <div><label class="lbl" for="dr-dbp">Diastolic BP</label><input type="number" id="dr-dbp" class="inp" value="88" min="50" max="130" placeholder="mmHg"></div>
+            <div><label class="lbl" for="dr-hr">Heart Rate</label><input type="number" id="dr-hr" class="inp" value="85" min="45" max="150" placeholder="bpm"></div>
+            <div><label class="lbl" for="dr-gluc">Glucose</label><input type="number" id="dr-gluc" class="inp" value="118" min="60" max="300" placeholder="mg/dL"></div>
+            <div><label class="lbl" for="dr-bmi">BMI</label><input type="number" id="dr-bmi" class="inp" value="27.5" min="15" max="50" step="0.1" placeholder="kg/m²"></div>
+            <div><label class="lbl" for="dr-chol">Cholesterol</label><input type="number" id="dr-chol" class="inp" value="215" min="100" max="350" placeholder="mg/dL"></div>
+            <div><label class="lbl" for="dr-o2">O₂ Sat.</label><input type="number" id="dr-o2" class="inp" value="97" min="85" max="100" step="0.1" placeholder="%"></div>
+          </div>
+          <button type="button" onclick="runDoctorAnalysis()" id="dr-ai-btn" class="btn bp fw">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Analyze Patient
+          </button>
+          <div id="dr-ai-result" style="display:none;margin-top:10px"></div>
+        </div>
+
+      </div>
+
+      <!-- ══ PANE: RECORDS ══ -->
+      <div class="pane hidden" id="pane-records">
+        <p class="hf font-semibold text-white mb-4 text-sm">Record Operations</p>
+        <div class="g2">
+
+          <!-- Connect -->
+          <div class="card bl">
+            <div class="ch">
+              <div class="ci" style="background:rgba(59,130,246,.12)"><i class="fa-solid fa-link" style="color:var(--blue)"></i></div>
+              <div><p class="ct">Connect to Patient</p><p class="cs">Link smart contract to session</p></div>
+            </div>
+            {% if contract_address and contract_address != "0" and contract_address != None %}
+            <div class="bge mb-3"><i class="fa-solid fa-circle-check"></i> {{ contract_address[:20] }}…</div>
+            {% endif %}
+            <form action="" method="post" role="form">
+              {{ form.csrf_token() }}
+              <div class="space-y-2">
+                <label class="lbl">Patient Contract Address</label>
+                {{ form.contract_address(class="inp", placeholder="0x... patient contract", **{"aria-label":"Patient Contract Address"}) }}
+                <button type="submit" name="action10" value="VALUE10" class="btn bb fw"><i class="fa-solid fa-link"></i> Connect</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Print -->
+          <div class="card gcy">
+            <div class="ch">
+              <div class="ci" style="background:rgba(6,182,212,.12)"><i class="fa-solid fa-print" style="color:var(--cy)"></i></div>
+              <div><p class="ct">Print Record</p></div>
+            </div>
+            <form action="" method="post" role="form">
+              {{ form.csrf_token() }}
+              <div class="space-y-2">
+                <label class="lbl">Record ID</label>
+                {{ form.print_record(class="inp", placeholder="0x... record ID", **{"aria-label":"Record ID to Print"}) }}
+                <button type="submit" name="action1" value="VALUE1" class="btn bc fw"><i class="fa-solid fa-print"></i> Print</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Copy -->
+          <div class="card" style="border-left:3px solid #94A3B8">
+            <div class="ch">
+              <div class="ci" style="background:rgba(255,255,255,.06)"><i class="fa-solid fa-copy" style="color:#94A3B8"></i></div>
+              <div><p class="ct">Copy Record</p></div>
+            </div>
+            <form action="" method="post" role="form">
+              {{ form.csrf_token() }}
+              <div class="space-y-2">
+                <label class="lbl">Record ID</label>
+                {{ form.copy_record(class="inp", placeholder="0x... record ID", **{"aria-label":"Record ID to Copy"}) }}
+                <button type="submit" name="action4" value="VALUE4" class="btn bg_ fw"><i class="fa-solid fa-copy"></i> Copy</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Query -->
+          <div class="card gam">
+            <div class="ch">
+              <div class="ci" style="background:rgba(245,158,11,.12)"><i class="fa-solid fa-magnifying-glass" style="color:var(--amb)"></i></div>
+              <div><p class="ct">Query Records</p></div>
+            </div>
+            <form action="" method="post" role="form">
+              {{ form.csrf_token() }}
+              <div class="space-y-2">
+                <label class="lbl">Record ID (blank = list all)</label>
+                {{ form.query(class="inp", placeholder="0x... or leave blank", **{"aria-label":"Record ID to Query"}) }}
+                <div class="flex gap-2">
+                  <button type="submit" name="action3" value="VALUE3" class="btn ba flex-1"><i class="fa-solid fa-search"></i> Query</button>
+                  <button type="submit" name="action30" value="VALUE30" class="btn bg_ flex-1" style="color:var(--amb);border-color:rgba(245,158,11,.25)"><i class="fa-solid fa-list"></i> All IDs</button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Delete -->
+          <div class="card grd span2">
+            <div class="ch">
+              <div class="ci" style="background:rgba(239,68,68,.1)"><i class="fa-solid fa-trash" style="color:var(--red)"></i></div>
+              <div><p class="ct">Delete Record</p><p class="cs" style="color:rgba(252,165,165,.7)">This permanently removes the record from the blockchain</p></div>
+            </div>
+            <form action="" method="post" role="form" class="flex gap-3 items-end">
+              {{ form.csrf_token() }}
+              <div class="flex-1">
+                <label class="lbl">Record ID</label>
+                {{ form.delete_record(class="inp", placeholder="0x... record ID", **{"aria-label":"Record ID to Delete"}) }}
+              </div>
+              <button type="submit" name="action5" value="VALUE5" class="btn br" style="flex-shrink:0"><i class="fa-solid fa-trash"></i> Delete</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANE: UPDATE ══ -->
+      <div class="pane hidden" id="pane-update">
+        <p class="hf font-semibold text-white mb-4 text-sm">Update Medical Record</p>
+        <div class="g2">
+          <div class="card gem span2">
+            <div class="flex items-start justify-between mb-4">
+              <div class="ch" style="margin-bottom:0">
+                <div class="ci" style="background:rgba(16,185,129,.12)"><i class="fa-solid fa-pen-to-square" style="color:var(--em)"></i></div>
+                <div><p class="ct">Update Patient Record</p><p class="cs">Uploaded to IPFS → CID stored on blockchain</p></div>
+              </div>
+              <span class="bge"><span class="dp" style="background:var(--em)"></span>IPFS + Chain</span>
+            </div>
+            <form action="" method="post" role="form" enctype="multipart/form-data">
+              {{ form.csrf_token() }}
+              <div class="g2 gap-sm">
+                <div class="span2">
+                  <label class="lbl">Record ID <span style="color:var(--mu)">(from patient QR)</span></label>
+                  {{ form.update_record_id(class="inp", placeholder="0x... record ID", **{"aria-label":"Record ID to Update"}) }}
+                </div>
+                <div class="span2">
+                  <label class="lbl">Medical Notes / New Record Content</label>
+                  {{ form.update_record_rec(class="inp", placeholder="Enter clinical notes, diagnosis, prescription…", **{"aria-label":"Medical Record Content"}) }}
+                </div>
+                <!-- IPFS file -->
+                <div class="span2" style="padding:12px 14px;border-radius:10px;background:rgba(16,185,129,.04);border:1px dashed rgba(16,185,129,.25)">
+                  <label class="lbl" style="color:var(--em)"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>Attach File to IPFS <span style="color:var(--mu)">(optional — overrides text above)</span></label>
+                  <input type="file" name="ipfs_file" accept="*/*" class="block w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:cursor-pointer file:bg-emerald-500/10 file:text-emerald-400" style="color:var(--mu)" aria-label="IPFS file upload">
+                  <p class="text-xs mt-1.5" style="color:var(--mu)">PDF, images, JSON, DICOM — up to 50MB</p>
+                </div>
+                <!-- FL hospital -->
+                <div class="span2" style="padding:12px 14px;border-radius:10px;background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.18)">
+                  <label class="lbl" style="color:var(--pur)"><i class="fa-solid fa-brain mr-1"></i>Your Hospital — AI auto-trains on save</label>
+                  <select name="fl_hospital" class="inp" aria-label="Hospital for federated learning">
+                    <option value="Hospital_A">Hospital A — Cardiology Ward</option>
+                    <option value="Hospital_B">Hospital B — General Medicine</option>
+                    <option value="Hospital_C">Hospital C — High-Risk Unit</option>
+                  </select>
+                </div>
+                <div class="span2">
+                  <button type="submit" name="action2" value="VALUE2" class="btn be fw">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Upload to IPFS &amp; Save to Blockchain
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANE: AI TRAINING ══ -->
+      <div class="pane hidden" id="pane-ai">
+        <p class="hf font-semibold text-white mb-4 text-sm">Federated AI Training</p>
+        <div class="g2">
+
+          <!-- Status + train -->
+          <div class="card gpu">
+            <div class="flex items-start justify-between mb-4">
+              <div class="ch" style="margin-bottom:0">
+                <div class="ci" style="background:rgba(139,92,246,.14)"><i class="fa-solid fa-brain" style="color:var(--pur)"></i></div>
+                <div><p class="ct">Train Local Model</p><p class="cs">Raw data never leaves this hospital</p></div>
+              </div>
+              <span class="bgp"><span class="dp" style="background:var(--pur)"></span>AI + Chain</span>
+            </div>
+            <div id="fl-status-panel" class="mb-4 p-3 rounded-xl" style="background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.18)">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold" style="color:#C4B5FD">Network Status</span>
+                <button onclick="loadFLStatus()" class="btn bp" style="font-size:.68rem;padding:.25rem .6rem">
+                  <i class="fa-solid fa-rotate-right"></i> Refresh
+                </button>
+              </div>
+              <div id="fl-round" class="text-xs" style="color:var(--mu)">Loading…</div>
+              <div id="fl-bar-wrap" class="mt-3" style="display:none">
+                <div class="flex justify-between text-xs mb-1" style="color:var(--mu)">
+                  <span>Progress</span><span id="fl-pct">0%</span>
+                </div>
+                <div class="progress-wrap"><div id="fl-bar" class="progress-bar" style="background:var(--pur);width:0%"></div></div>
+                <div id="fl-badges" class="mt-2 flex flex-wrap gap-1"></div>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <label class="lbl">Select Your Hospital</label>
+              <select id="fl-hospital-select" class="inp" aria-label="Select hospital">
                 <option value="Hospital_A">Hospital A — Cardiology Ward</option>
                 <option value="Hospital_B">Hospital B — General Medicine</option>
                 <option value="Hospital_C">Hospital C — High-Risk Unit</option>
               </select>
-            </div>
-            <button type="button" id="fl-train-btn" onclick="trainHospital()" class="btn btn-purple btn-full">
-              <i class="fa-solid fa-microchip"></i> Train My Hospital Model
-            </button>
-            <button type="button" id="fl-aggregate-btn" onclick="manualAggregate()" class="hidden btn btn-green btn-full">
-              <i class="fa-solid fa-layer-group"></i> Run FedAvg — Aggregate Global Model
-            </button>
-          </div>
-          <div id="fl-result" class="hidden mt-3 p-3 rounded-xl text-xs" style="background:rgba(255,255,255,.03);border:1px solid var(--border)"></div>
-        </section>
-
-        <!-- SECTION G: Delete Record -->
-        <section class="section-card accent-red anim" style="animation-delay:.14s">
-          <div class="sec-header">
-            <div class="sec-icon" style="background:rgba(239,68,68,.1)"><i class="fa-solid fa-trash" style="color:var(--red)"></i></div>
-            <p class="sec-title">Delete Medical Record</p>
-          </div>
-          <form action="" method="post" role="form">
-            {{ form.csrf_token() }}
-            <div class="space-y-3">
-              <div>
-                <label for="delete_record" class="field-label">Record ID</label>
-                {{ form.delete_record(id="delete_record", class="input-field", placeholder="0x... record ID", **{"aria-label":"Record ID to Delete"}) }}
-              </div>
-              <button type="submit" name="action5" value="VALUE5" class="btn btn-red" aria-label="Delete Record">
-                <i class="fa-solid fa-trash"></i> Delete Record
+              <button type="button" id="fl-train-btn" onclick="trainHospital()" class="btn bp fw">
+                <i class="fa-solid fa-microchip"></i> Train My Hospital Model
+              </button>
+              <button type="button" id="fl-agg-btn" onclick="manualAggregate()" class="hidden btn be fw">
+                <i class="fa-solid fa-layer-group"></i> Run FedAvg — Aggregate Global Model
               </button>
             </div>
-          </form>
-        </section>
+            <div id="fl-result" class="hidden mt-3 p-3 rounded-xl text-xs" style="background:rgba(255,255,255,.03);border:1px solid var(--border)"></div>
+          </div>
 
-      </div><!-- end forms column -->
+          <!-- How it works -->
+          <div class="card" style="border-left:3px solid rgba(139,92,246,.4)">
+            <div class="ch">
+              <div class="ci" style="background:rgba(139,92,246,.1)"><i class="fa-solid fa-circle-info" style="color:var(--pur)"></i></div>
+              <div><p class="ct">How Federated Learning Works</p></div>
+            </div>
+            <ol class="space-y-3 text-xs" style="color:#94A3B8">
+              <li class="flex gap-2.5">
+                <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:var(--pur)">1</span>
+                Each hospital trains a local model on its own patient data
+              </li>
+              <li class="flex gap-2.5">
+                <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:var(--pur)">2</span>
+                Only model weight hashes are recorded on the blockchain (not raw data)
+              </li>
+              <li class="flex gap-2.5">
+                <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:var(--pur)">3</span>
+                FedAvg aggregates all hospitals into one global model
+              </li>
+              <li class="flex gap-2.5">
+                <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:var(--em)">4</span>
+                Patients get AI risk predictions from the global model
+              </li>
+            </ol>
+            <div class="mt-4 p-3 rounded-xl text-xs" style="background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.18);color:var(--em)">
+              <i class="fa-solid fa-shield-halved mr-1"></i> Patient data never leaves the hospital — only weights are shared
+            </div>
+          </div>
 
-      <!-- RESULTS SIDE PANEL -->
-      <div class="w-88 shrink-0 p-6" style="width:360px">
+        </div>
+      </div>
 
+      <!-- ══ RESULTS PANEL ══ -->
+      {% if isCard == True or isDF %}
+      <div class="rp" id="results-panel">
         {% if isCard == True %}
         {% block content1 %}
-        <div class="result-panel sticky top-20 anim" style="border-color:rgba(59,130,246,.2)">
-          <div class="flex items-center gap-2.5 mb-4 pb-4" style="border-bottom:1px solid var(--border)">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:rgba(59,130,246,.12)">
-              <i class="fa-solid fa-bolt text-sm" style="color:var(--blue)"></i>
-            </div>
-            <div>
-              <p class="text-xs" style="color:var(--muted)">Transaction Result</p>
-              <p class="hfont font-semibold text-sm text-white">{{ result }}</p>
-            </div>
+        <div class="flex items-center gap-2 mb-4 pb-3" style="border-bottom:1px solid var(--border)">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(59,130,246,.12)">
+            <i class="fa-solid fa-bolt text-xs" style="color:var(--blue)"></i>
           </div>
-
-          <div class="space-y-2.5">
-
-            <!-- IPFS status -->
-            {% if ipfs_upload_success is defined %}
+          <div>
+            <p class="text-xs" style="color:var(--mu)">Transaction Result</p>
+            <p class="hf font-semibold text-sm text-white">{{ result }}</p>
+          </div>
+        </div>
+        <div class="space-y-2">
+          {% if ipfs_upload_success is defined %}
             {% if ipfs_upload_success %}
-            <div class="badge-green" style="display:flex"><i class="fa-solid fa-cloud-arrow-up"></i> Record uploaded to IPFS successfully</div>
+            <div class="bge" style="display:flex"><i class="fa-solid fa-cloud-arrow-up"></i> Uploaded to IPFS</div>
             {% else %}
-            <div class="badge-amber" style="display:flex"><i class="fa-solid fa-triangle-exclamation"></i> IPFS unavailable — saved directly on-chain</div>
+            <div class="bga" style="display:flex"><i class="fa-solid fa-triangle-exclamation"></i> IPFS unavailable — on-chain fallback</div>
             {% endif %}
-            {% endif %}
-
-            <!-- Tx hash -->
-            <div class="result-row">
-              <p class="result-label">Transaction Hash</p>
-              <p class="result-val font-mono">{{ tx_hash[:40] }}…</p>
-            </div>
-
-            {% if event_logs and event_logs|length > 0 %}
-            {% if event_logs[0]['args']['record_unique_id'] %}
-            <div class="result-row" style="border-color:rgba(59,130,246,.2);background:rgba(59,130,246,.04)">
-              <p class="result-label" style="color:rgba(147,197,253,.7)">Unique Record ID</p>
-              <p class="result-val font-mono" id="rec-id">{{ event_logs[0]['args']['record_unique_id'] }}</p>
-              <button onclick="copyText(document.getElementById('rec-id').textContent.trim())" class="btn btn-purple mt-2 py-1 px-2.5" style="font-size:.7rem;min-width:0">
-                <i class="fa-solid fa-copy"></i> Copy
-              </button>
-            </div>
-            <div class="result-row text-center" style="padding:.75rem">
-              <p class="result-label mb-2">Patient QR Code</p>
-              <img src={{qr_code}} alt="QR Code" class="mx-auto rounded-lg" style="max-width:120px"/>
-            </div>
-            {% endif %}
-
-            {% if event_logs[0]['args']['record_msg'] %}
-            <div class="result-row">
-              <p class="result-label">Record Message</p>
-              <p class="result-val">{{ event_logs[0]['args']['record_msg'] }}</p>
-            </div>
-            <div class="result-row">
-              <p class="result-label">Status Code</p>
-              <p class="result-val">{{ event_logs[0]['args']['record_status'] }} <span style="color:var(--muted)">(0=Created 1=Deleted 2=Changed 3=Queried 4=Printed 5=Copied)</span></p>
-            </div>
-            {% endif %}
-
-            {% if event_logs[0]['args']['return_msg'] %}
-            <div class="result-row">
-              <p class="result-label">Event Log</p>
-              <p class="result-val">{{ event_logs[0]['args']['return_msg'] }}</p>
-              <p class="result-val font-mono mt-1" style="font-size:.75rem;color:var(--muted)">{{ event_logs[0]['args']['doctor_address'] }}</p>
-              <p class="result-val mt-1" style="font-size:.75rem;color:var(--muted)">Epoch: {{ event_logs[0]['args']['record_time'] }}</p>
-            </div>
-            {% endif %}
-            {% endif %}
-
-            <!-- Medical record details -->
-            {% if record_details %}
-            <div class="result-row" style="border-color:rgba(16,185,129,.2);background:rgba(16,185,129,.03)">
-              <div class="flex items-center justify-between mb-2">
-                <p class="result-label" style="color:rgba(52,211,153,.8)"><i class="fa-solid fa-file-medical mr-1"></i>Medical Record</p>
-                {% if ipfs_cid %}
-                <span class="badge-green" style="font-size:.65rem">IPFS</span>
-                {% else %}
-                <span class="badge-blue" style="font-size:.65rem">On-chain</span>
-                {% endif %}
-              </div>
-
-              {% if is_binary or (ipfs_cid and record_details|length > 200) %}
-              <div class="flex flex-col items-center py-5 text-center rounded-xl" style="background:rgba(255,255,255,.02);border:1px solid var(--border)">
-                {% if record_details and record_details|length < 500 %}
-                <p class="text-xs mb-4 px-3 text-white leading-relaxed">{{ record_details }}</p>
-                {% endif %}
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style="background:rgba(16,185,129,.12)">
-                  <i class="fa-solid fa-file-medical text-xl" style="color:var(--emerald)"></i>
-                </div>
-                <p class="text-sm font-semibold text-white mb-1">File Attachment</p>
-                <p class="text-xs mb-4" style="color:var(--muted)">Protected file stored on IPFS</p>
-                <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" class="btn btn-green py-2 px-4" style="font-size:.8rem">
-                  <i class="fa-solid fa-eye"></i> View &amp; Download
-                </a>
-              </div>
-              {% else %}
-              <p class="text-sm text-white leading-relaxed whitespace-pre-wrap">{{ record_details }}</p>
-              {% endif %}
-            </div>
-
-            {% if ipfs_cid %}
-            <div class="result-row" style="border-color:rgba(139,92,246,.2);background:rgba(139,92,246,.03)">
-              <p class="result-label" style="color:rgba(196,181,253,.7)"><i class="fa-solid fa-cubes mr-1"></i>IPFS Storage</p>
-              <p class="result-val font-mono" id="ipfs-cid-text">{{ ipfs_cid }}</p>
-              <div class="flex items-center gap-2 mt-2">
-                <button onclick="copyText(document.getElementById('ipfs-cid-text').textContent.trim())" class="btn btn-purple py-1 px-2.5" style="font-size:.7rem;min-width:0">
-                  <i class="fa-solid fa-copy"></i> Copy CID
-                </button>
-                {% if ipfs_source == 'local' %}
-                <span class="badge-green" style="font-size:.65rem"><i class="fa-solid fa-server"></i> Local Node</span>
-                {% elif ipfs_source == 'gateway' %}
-                <span class="badge-blue" style="font-size:.65rem"><i class="fa-solid fa-globe"></i> Gateway</span>
-                {% else %}
-                <span style="font-size:.65rem;padding:.2rem .5rem;border-radius:100px;background:rgba(239,68,68,.1);color:var(--red)">Unavailable</span>
-                {% endif %}
-              </div>
-              {% if ipfs_gateway_url and ipfs_cid %}
-              <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" rel="noopener" class="flex items-center gap-1.5 text-xs mt-2 hover:underline" style="color:var(--purple)">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> View on IPFS Gateway
-              </a>
-              {% endif %}
-            </div>
-            {% endif %}
-            {% endif %}
-
+          {% endif %}
+          <div class="rrow"><p class="rlbl">Tx Hash</p><p class="rval font-mono">{{ tx_hash[:40] }}…</p></div>
+          {% if event_logs and event_logs|length > 0 %}
+          {% if event_logs[0]['args']['record_unique_id'] %}
+          <div class="rrow" style="border-color:rgba(59,130,246,.2);background:rgba(59,130,246,.04)">
+            <p class="rlbl" style="color:rgba(147,197,253,.7)">Unique Record ID</p>
+            <p class="rval font-mono" id="rec-id">{{ event_logs[0]['args']['record_unique_id'] }}</p>
+            <button onclick="copyText(document.getElementById('rec-id').textContent.trim())" class="btn bgb mt-2" style="font-size:.68rem;padding:.2rem .6rem">
+              <i class="fa-solid fa-copy"></i> Copy
+            </button>
           </div>
+          <div class="rrow text-center"><p class="rlbl mb-2">Patient QR</p><img src={{qr_code}} alt="QR" class="mx-auto rounded-lg" style="max-width:110px"/></div>
+          {% endif %}
+          {% if event_logs[0]['args']['record_msg'] %}
+          <div class="rrow"><p class="rlbl">Message</p><p class="rval">{{ event_logs[0]['args']['record_msg'] }}</p></div>
+          <div class="rrow"><p class="rlbl">Status</p><p class="rval">{{ event_logs[0]['args']['record_status'] }} <span style="color:var(--mu)">(0=Created 2=Changed 3=Queried…)</span></p></div>
+          {% endif %}
+          {% if event_logs[0]['args']['return_msg'] %}
+          <div class="rrow">
+            <p class="rlbl">Event Log</p>
+            <p class="rval">{{ event_logs[0]['args']['return_msg'] }}</p>
+            <p class="rval font-mono mt-1" style="color:var(--mu);font-size:.7rem">{{ event_logs[0]['args']['doctor_address'] }}</p>
+            <p class="rval mt-1" style="color:var(--mu);font-size:.7rem">Epoch: {{ event_logs[0]['args']['record_time'] }}</p>
+          </div>
+          {% endif %}
+          {% endif %}
+          {% if record_details %}
+          <div class="rrow" style="border-color:rgba(16,185,129,.2);background:rgba(16,185,129,.03)">
+            <div class="flex items-center justify-between mb-2">
+              <p class="rlbl" style="color:rgba(52,211,153,.8)"><i class="fa-solid fa-file-medical mr-1"></i>Record</p>
+              {% if ipfs_cid %}<span class="bge" style="font-size:.62rem">IPFS</span>{% else %}<span class="bgb" style="font-size:.62rem">On-chain</span>{% endif %}
+            </div>
+            {% if is_binary or (ipfs_cid and record_details|length > 200) %}
+            <div class="text-center py-4">
+              {% if record_details and record_details|length < 500 %}<p class="text-xs text-white mb-3 leading-relaxed">{{ record_details }}</p>{% endif %}
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2" style="background:rgba(16,185,129,.12)"><i class="fa-solid fa-file-medical" style="color:var(--em)"></i></div>
+              <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" class="btn be mt-2" style="font-size:.75rem"><i class="fa-solid fa-eye"></i> View File</a>
+            </div>
+            {% else %}
+            <p class="text-xs text-white leading-relaxed whitespace-pre-wrap">{{ record_details }}</p>
+            {% endif %}
+          </div>
+          {% if ipfs_cid %}
+          <div class="rrow" style="border-color:rgba(139,92,246,.2);background:rgba(139,92,246,.03)">
+            <p class="rlbl" style="color:rgba(196,181,253,.7)"><i class="fa-solid fa-cubes mr-1"></i>IPFS CID</p>
+            <p class="rval font-mono" id="cid-txt">{{ ipfs_cid }}</p>
+            <div class="flex items-center gap-1.5 mt-2">
+              <button onclick="copyText(document.getElementById('cid-txt').textContent.trim())" class="btn bgp" style="font-size:.68rem;padding:.2rem .6rem"><i class="fa-solid fa-copy"></i> Copy</button>
+              {% if ipfs_source == 'local' %}<span class="bge" style="font-size:.62rem">Local Node</span>
+              {% elif ipfs_source == 'gateway' %}<span class="bgb" style="font-size:.62rem">Gateway</span>{% endif %}
+            </div>
+            {% if ipfs_gateway_url and ipfs_cid %}
+            <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" rel="noopener" class="flex items-center gap-1 text-xs mt-2 hover:underline" style="color:var(--pur)"><i class="fa-solid fa-arrow-up-right-from-square"></i> View on IPFS</a>
+            {% endif %}
+          </div>
+          {% endif %}
+          {% endif %}
         </div>
         {% endblock %}
         {% endif %}
 
         {% if isDF %}
         {% block content2 %}
-        <div class="result-panel sticky top-20">
-          <h3 class="hfont font-semibold text-white mb-4 flex items-center gap-2 text-sm">
-            <i class="fa-solid fa-list" style="color:var(--amber)"></i> Unique Record IDs
-          </h3>
-          <div class="space-y-2">
-            {% for key,value in filtered_df.iterrows() %}
-            <div class="result-row flex items-center justify-between">
-              <div class="min-w-0">
-                <p class="text-xs font-mono" style="color:var(--muted)">{{ value['contract_address'][0:10] }}…</p>
-                <p class="text-xs font-mono text-white mt-0.5" id="uid-{{ key }}">{{ value['unique_id'] }}</p>
-              </div>
-              <button onclick="copyText(document.getElementById('uid-{{ key }}').textContent.trim())" class="btn btn-ghost py-1 px-2.5" style="font-size:.7rem;min-width:0">
-                <i class="fa-solid fa-copy"></i>
-              </button>
+        <p class="hf font-semibold text-white text-sm mb-3 flex items-center gap-2"><i class="fa-solid fa-list" style="color:var(--amb)"></i> Unique Record IDs</p>
+        <div class="space-y-1.5">
+          {% for key,value in filtered_df.iterrows() %}
+          <div class="rrow flex items-center justify-between">
+            <div class="min-w-0">
+              <p class="rval font-mono" style="font-size:.7rem;color:var(--mu)">{{ value['contract_address'][0:10] }}…</p>
+              <p class="rval font-mono mt-0.5" id="uid-{{ key }}">{{ value['unique_id'] }}</p>
             </div>
-            {% endfor %}
+            <button onclick="copyText(document.getElementById('uid-{{ key }}').textContent.trim())" class="btn bg_" style="font-size:.68rem;padding:.2rem .6rem;flex-shrink:0"><i class="fa-solid fa-copy"></i></button>
           </div>
+          {% endfor %}
         </div>
         {% endblock %}
         {% endif %}
+      </div>
+      {% endif %}
 
-      </div><!-- end results panel -->
-    </div>
-  </div>
+    </div><!-- .content -->
+  </div><!-- .main -->
 
   <!-- Copy toast -->
-  <div id="copy-toast" class="fixed bottom-6 right-6 text-sm font-semibold px-4 py-2.5 rounded-xl opacity-0 transition-opacity duration-300 pointer-events-none" style="background:var(--emerald);color:#fff">
+  <div id="copy-toast" class="fixed bottom-5 right-5 text-sm font-semibold px-4 py-2.5 rounded-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50" style="background:var(--em);color:#fff">
     <i class="fa-solid fa-check mr-1.5"></i> Copied!
   </div>
 
+  <!-- ═══ ERROR MODAL ══════════════════════════════════════════════ -->
+  {% if flash_error %}
+  <div id="err-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,.65);backdrop-filter:blur(4px)">
+    <div class="w-full max-w-md rounded-2xl overflow-hidden" style="background:#0D1A2E;border:1px solid rgba(239,68,68,.3);box-shadow:0 25px 60px rgba(0,0,0,.6)">
+
+      <!-- Red header bar -->
+      <div class="flex items-center justify-between px-5 py-4" style="background:rgba(239,68,68,.1);border-bottom:1px solid rgba(239,68,68,.2)">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3)">
+            <i class="fa-solid fa-triangle-exclamation" style="color:#F87171"></i>
+          </div>
+          <div>
+            <p class="hfont font-bold text-white text-sm leading-snug">{{ flash_error.title }}</p>
+            <p style="font-size:.68rem;color:rgba(248,113,113,.8)">Blockchain Transaction Error</p>
+          </div>
+        </div>
+        <button onclick="document.getElementById('err-overlay').remove()" class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors" style="background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid rgba(255,255,255,.08)" aria-label="Close">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-5 space-y-4">
+
+        <!-- Why -->
+        <div class="rounded-xl p-4" style="background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.15)">
+          <p class="flex items-center gap-2 text-xs font-semibold mb-2" style="color:#F87171">
+            <i class="fa-solid fa-circle-question"></i> Why did this happen?
+          </p>
+          <p class="text-sm leading-relaxed whitespace-pre-line" style="color:#CBD5E1">{{ flash_error.why }}</p>
+        </div>
+
+        <!-- Fix -->
+        <div class="rounded-xl p-4" style="background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.15)">
+          <p class="flex items-center gap-2 text-xs font-semibold mb-2" style="color:#6EE7B7">
+            <i class="fa-solid fa-screwdriver-wrench"></i> How to fix it
+          </p>
+          <p class="text-sm leading-relaxed whitespace-pre-line" style="color:#CBD5E1">{{ flash_error.fix }}</p>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="px-5 pb-5">
+        <button onclick="document.getElementById('err-overlay').remove()" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold font-['Space_Grotesk'] transition-all" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#E2E8F0">
+          <i class="fa-solid fa-circle-check"></i> Got it, I'll fix this
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Persistent error toast (bottom-left) -->
+  <div id="err-toast" class="fixed bottom-5 left-5 z-40 flex items-start gap-3 p-3.5 rounded-xl max-w-xs shadow-xl" style="background:#0D1A2E;border:1px solid rgba(239,68,68,.3)">
+    <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0" style="color:#F87171;font-size:.9rem"></i>
+    <div class="min-w-0">
+      <p class="text-xs font-semibold text-white leading-snug">{{ flash_error.title }}</p>
+      <p class="text-xs mt-0.5 leading-snug" style="color:#94A3B8">Click the modal for details &amp; fix.</p>
+    </div>
+    <button onclick="document.getElementById('err-toast').remove()" class="shrink-0 w-5 h-5 flex items-center justify-center rounded" style="color:#475569" aria-label="Dismiss">
+      <i class="fa-solid fa-xmark text-xs"></i>
+    </button>
+  </div>
+  {% endif %}
+
   <script>
+    // ── Sidebar toggle ──────────────────────────────────────────────
+    function toggleSidebar() {
+      const sb = document.getElementById('sidebar');
+      const arrow = document.getElementById('sb-arrow');
+      sb.classList.toggle('open');
+      arrow.className = sb.classList.contains('open')
+        ? 'fa-solid fa-chevron-left' : 'fa-solid fa-chevron-right';
+    }
+
+    // ── Tab switching ───────────────────────────────────────────────
+    function showTab(name) {
+      document.querySelectorAll('.pane').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+      document.querySelectorAll('.ni').forEach(n => n.classList.remove('act'));
+      const pane = document.getElementById('pane-' + name);
+      if (pane) pane.classList.remove('hidden');
+      document.querySelectorAll(`[data-tab="${name}"]`).forEach(el => el.classList.add(el.classList.contains('tab') ? 'on' : 'act'));
+      localStorage.setItem('drTab', name);
+      return false;
+    }
+
+    // ── Copy helper ─────────────────────────────────────────────────
     function copyText(text) {
       navigator.clipboard.writeText(text).then(() => {
         const el = document.getElementById('copy-toast');
@@ -554,110 +737,202 @@
       });
     }
 
+    // ── Form submit spinner ─────────────────────────────────────────
     document.querySelectorAll('form').forEach(form => {
       form.addEventListener('submit', function() {
         const btn = this.querySelector('button[type="submit"]');
-        if (btn) {
-          setTimeout(() => {
-            btn.style.opacity = '0.6';
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing…';
-          }, 10);
-        }
+        if (btn) { setTimeout(() => { btn.style.opacity='0.6'; btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Processing…'; }, 10); }
+        const pane = this.closest('.pane');
+        if (pane) { const id = pane.id.replace('pane-',''); localStorage.setItem('drTab', id); }
       });
     });
 
-    // ── Federated Learning ─────────────────────────────────────────
-    async function loadFLStatus() {
-      try {
-        const res  = await fetch('/fl/status');
-        const data = await res.json();
-        const roundEl = document.getElementById('fl-round');
-        if (!roundEl) return;
-        const trained = data.hospitals_trained || [];
-        const pct     = data.progress_pct || 0;
-        const agg     = data.aggregated;
-        roundEl.innerHTML = `Round <strong class="text-white">${data.round}</strong> &mdash; `
-          + `<span style="color:${agg ? 'var(--emerald)' : 'var(--amber)'}">`
-          + (agg ? 'Global model ready ✓' : `${trained.length}/${data.hospitals_total} hospitals trained`) + '</span>';
-        document.getElementById('fl-progress-bar-wrap').style.display = 'block';
-        document.getElementById('fl-pct').textContent = pct + '%';
-        document.getElementById('fl-progress-bar').style.cssText =
-          `width:${pct}%;background:${agg ? 'var(--emerald)' : 'var(--purple)'}`;
-        const listEl = document.getElementById('fl-trained-list');
-        listEl.innerHTML = trained.map(h =>
-          `<span class="badge-green" style="font-size:.65rem"><i class="fa-solid fa-circle-check"></i>${h}</span>`
-        ).join('');
-        (data.hospitals_remaining || []).forEach(h => {
-          listEl.innerHTML += `<span style="font-size:.65rem;padding:.2rem .5rem;border-radius:100px;background:rgba(255,255,255,.04);color:var(--muted)">${h}</span>`;
-        });
-        const aggBtn = document.getElementById('fl-aggregate-btn');
-        if (pct === 100 && !agg) aggBtn.classList.remove('hidden');
-        else aggBtn.classList.add('hidden');
-      } catch(e) {
-        const el = document.getElementById('fl-round');
-        if (el) el.textContent = 'Could not load FL status.';
+    // ── FL Status helpers ───────────────────────────────────────────
+    function updateFLUI(data) {
+      const trained = data.hospitals_trained || [];
+      const pct     = data.progress_pct || 0;
+      const agg     = data.aggregated;
+      const col     = agg ? 'var(--em)' : 'var(--pur)';
+
+      // Overview stat
+      const sv = document.getElementById('stat-fl-val');
+      const sl = document.getElementById('stat-fl-lbl');
+      if (sv) { sv.textContent = agg ? 'Model Ready' : `${trained.length}/3 trained`; sv.style.color = col; }
+      if (sl) sl.textContent   = agg ? 'Global model ready' : 'Training in progress';
+
+      // Overview mini bar
+      const ob = document.getElementById('ov-fl-bar-wrap');
+      if (ob) {
+        ob.style.display = 'block';
+        document.getElementById('ov-fl-round').textContent = `Round ${data.round}`;
+        document.getElementById('ov-fl-pct').textContent   = pct + '%';
+        document.getElementById('ov-fl-bar').style.cssText = `width:${pct}%;background:${col}`;
+        const bd = document.getElementById('ov-fl-badges');
+        if (bd) {
+          bd.innerHTML = trained.map(h => `<span class="bge" style="font-size:.62rem">${h}</span>`).join('');
+          (data.hospitals_remaining||[]).forEach(h => { bd.innerHTML += `<span style="font-size:.62rem;padding:.15rem .45rem;border-radius:100px;background:rgba(255,255,255,.04);color:var(--mu)">${h}</span>`; });
+        }
       }
+      const os = document.getElementById('ov-fl-status');
+      if (os) os.innerHTML = agg ? `<span class="bge">Global model ready — Round ${data.round}</span>` : `Round ${data.round} — ${trained.length}/3 hospitals trained`;
+
+      // AI tab bar
+      const rnd = document.getElementById('fl-round');
+      if (rnd) rnd.innerHTML = `Round <strong style="color:#fff">${data.round}</strong> &mdash; <span style="color:${col}">${agg ? 'Global model ready' : `${trained.length}/${data.hospitals_total} trained`}</span>`;
+      const bw = document.getElementById('fl-bar-wrap');
+      if (bw) {
+        bw.style.display = 'block';
+        document.getElementById('fl-pct').textContent = pct + '%';
+        document.getElementById('fl-bar').style.cssText = `width:${pct}%;background:${col}`;
+        const bd2 = document.getElementById('fl-badges');
+        if (bd2) {
+          bd2.innerHTML = trained.map(h => `<span class="bge" style="font-size:.62rem">${h}</span>`).join('');
+          (data.hospitals_remaining||[]).forEach(h => { bd2.innerHTML += `<span style="font-size:.62rem;padding:.15rem .45rem;border-radius:100px;background:rgba(255,255,255,.04);color:var(--mu)">${h}</span>`; });
+        }
+      }
+      const aggBtn = document.getElementById('fl-agg-btn');
+      if (aggBtn) { if (pct === 100 && !agg) aggBtn.classList.remove('hidden'); else aggBtn.classList.add('hidden'); }
+    }
+
+    async function loadFLStatus() {
+      try { const res = await fetch('/fl/status'); const data = await res.json(); updateFLUI(data); }
+      catch(e) { const el = document.getElementById('fl-round'); if(el) el.textContent = 'Could not load FL status.'; }
     }
 
     async function trainHospital() {
       const hospital = document.getElementById('fl-hospital-select').value;
-      const btn      = document.getElementById('fl-train-btn');
-      const resultEl = document.getElementById('fl-result');
-      btn.disabled   = true;
-      btn.innerHTML  = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Training local model…';
-      resultEl.classList.remove('hidden');
-      resultEl.style.cssText = 'background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:.75rem;font-size:.75rem;color:var(--muted)';
-      resultEl.textContent   = 'Training in progress — this takes a few seconds…';
+      const btn = document.getElementById('fl-train-btn');
+      const res_el = document.getElementById('fl-result');
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Training…';
+      res_el.classList.remove('hidden');
+      res_el.style.cssText = 'background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:.7rem;font-size:.75rem;color:var(--mu)';
+      res_el.textContent = 'Training in progress…';
       try {
-        const res  = await fetch(`/fl/train/${hospital}`, { method: 'POST' });
-        const data = await res.json();
-        if (data.status === 'trained' || data.status === 'already_trained') {
-          resultEl.style.cssText = 'background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:.75rem;font-size:.75rem;color:var(--emerald)';
-          let msg = data.status === 'already_trained'
-            ? `${hospital} already trained in round ${data.state?.round ?? '?'}.`
-            : `${hospital} trained — ${data.samples} samples, hash: ${data.weight_hash}`;
-          if (data.auto_aggregated) msg += ' FedAvg complete! Global model ready.';
-          else if ((data.remaining || []).length) msg += ` Waiting for: ${data.remaining.join(', ')}.`;
-          resultEl.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>${msg}`;
+        const r = await fetch(`/fl/train/${hospital}`, {method:'POST'});
+        const d = await r.json();
+        if (d.status === 'trained' || d.status === 'already_trained') {
+          res_el.style.cssText = 'background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:.7rem;font-size:.75rem;color:var(--em)';
+          let msg = d.status === 'already_trained' ? `Already trained in round ${d.state?.round ?? '?'}.` : `Trained — ${d.samples} samples, hash: ${d.weight_hash}`;
+          if (d.auto_aggregated) msg += ' FedAvg complete!';
+          else if ((d.remaining||[]).length) msg += ` Waiting for: ${d.remaining.join(', ')}.`;
+          res_el.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>${msg}`;
         } else {
-          resultEl.style.cssText = 'background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:.75rem;font-size:.75rem;color:var(--red)';
-          resultEl.textContent = data.error || JSON.stringify(data);
+          res_el.style.cssText = 'background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:.7rem;font-size:.75rem;color:var(--red)';
+          res_el.textContent = d.error || JSON.stringify(d);
         }
         loadFLStatus();
       } catch(e) {
-        resultEl.style.cssText = 'background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:.75rem;font-size:.75rem;color:var(--red)';
-        resultEl.textContent = 'Training failed: ' + e.message;
+        res_el.style.cssText = 'background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:.7rem;font-size:.75rem;color:var(--red)';
+        res_el.textContent = 'Failed: ' + e.message;
       }
-      btn.disabled  = false;
-      btn.innerHTML = '<i class="fa-solid fa-microchip mr-2"></i> Train My Hospital Model';
+      btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-microchip mr-1.5"></i> Train My Hospital Model';
     }
 
     async function manualAggregate() {
-      const btn      = document.getElementById('fl-aggregate-btn');
-      const resultEl = document.getElementById('fl-result');
-      btn.disabled   = true;
-      btn.innerHTML  = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Running FedAvg…';
+      const btn = document.getElementById('fl-agg-btn');
+      const res_el = document.getElementById('fl-result');
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Running FedAvg…';
       try {
-        const res  = await fetch('/fl/aggregate', { method: 'POST' });
-        const data = await res.json();
-        resultEl.classList.remove('hidden');
-        if (data.status === 'aggregated' || data.status === 'already_aggregated') {
-          resultEl.style.cssText = 'background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:.75rem;font-size:.75rem;color:var(--emerald)';
-          resultEl.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>${data.message || 'Global model aggregated.'}`;
+        const r = await fetch('/fl/aggregate', {method:'POST'}); const d = await r.json();
+        res_el.classList.remove('hidden');
+        if (d.status === 'aggregated' || d.status === 'already_aggregated') {
+          res_el.style.cssText = 'background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:.7rem;font-size:.75rem;color:var(--em)';
+          res_el.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>${d.message || 'Global model aggregated.'}`;
         } else {
-          resultEl.style.cssText = 'background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:.75rem;font-size:.75rem;color:var(--red)';
-          resultEl.textContent = data.error || JSON.stringify(data);
+          res_el.style.cssText = 'background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:.7rem;font-size:.75rem;color:var(--red)';
+          res_el.textContent = d.error || JSON.stringify(d);
         }
         loadFLStatus();
       } catch(e) {
-        resultEl.style.cssText = 'background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:.75rem;font-size:.75rem;color:var(--red)';
-        resultEl.textContent = 'Aggregation failed: ' + e.message;
+        res_el.style.cssText = 'background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:.7rem;font-size:.75rem;color:var(--red)';
+        res_el.textContent = 'Failed: ' + e.message;
       }
-      btn.disabled  = false;
-      btn.innerHTML = '<i class="fa-solid fa-layer-group mr-2"></i> Run FedAvg — Aggregate Global Model';
+      btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-layer-group mr-1.5"></i> Run FedAvg — Aggregate Global Model';
     }
 
-    window.addEventListener('DOMContentLoaded', loadFLStatus);
+    // ── Init ────────────────────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', () => {
+      const hasResult = document.body.dataset.hasResult === 'true';
+      const savedTab  = localStorage.getItem('drTab') || 'overview';
+      showTab(hasResult ? savedTab : 'overview');
+      loadFLStatus();
+    });
+
+    // ── Doctor AI Patient Analysis ─────────────────────────────────
+    async function runDoctorAnalysis() {
+      const btn = document.getElementById('dr-ai-btn');
+      const el  = document.getElementById('dr-ai-result');
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Analyzing…';
+
+      const vitals = {
+        age:               parseFloat(document.getElementById('dr-age').value),
+        systolic_bp:       parseFloat(document.getElementById('dr-sbp').value),
+        diastolic_bp:      parseFloat(document.getElementById('dr-dbp').value),
+        heart_rate:        parseFloat(document.getElementById('dr-hr').value),
+        glucose_level:     parseFloat(document.getElementById('dr-gluc').value),
+        bmi:               parseFloat(document.getElementById('dr-bmi').value),
+        cholesterol:       parseFloat(document.getElementById('dr-chol').value),
+        oxygen_saturation: parseFloat(document.getElementById('dr-o2').value),
+      };
+
+      try {
+        const [flResp, vaResp] = await Promise.all([
+          fetch('/fl/predict', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(vitals)}),
+          fetch('/ai/vitals-analysis', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({...vitals, prediction:0, probability:0})}),
+        ]);
+
+        let flData = null;
+        let flHtml = '';
+        if (flResp.ok) {
+          flData = await flResp.json();
+          const hi = flData.prediction === 1;
+          const col = hi ? '#EF4444' : '#10B981';
+          flHtml = `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:${hi?'rgba(239,68,68,.07)':'rgba(16,185,129,.07)'};border:1px solid ${hi?'rgba(239,68,68,.2)':'rgba(16,185,129,.2)'};margin-bottom:10px">
+            <i class="fa-solid ${hi?'fa-heart-crack':'fa-heart'} fa-lg" style="color:${col};flex-shrink:0"></i>
+            <div style="flex:1">
+              <span class="hf" style="font-weight:700;color:${col}">${flData.risk_label}</span>
+              <span style="font-size:.75rem;color:#94A3B8;margin-left:8px">${flData.probability}% probability · ${flData.model_version}</span>
+              <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.07);margin-top:6px;overflow:hidden">
+                <div style="width:${flData.probability}%;height:100%;border-radius:3px;background:${col}"></div>
+              </div>
+            </div>
+          </div>`;
+        } else {
+          flHtml = `<div style="font-size:.75rem;color:var(--amb);padding:.5rem .75rem;border-radius:8px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);margin-bottom:10px"><i class="fa-solid fa-triangle-exclamation mr-1"></i> FL model not ready — vitals analysis only.</div>`;
+        }
+
+        const vaPayload = {...vitals, prediction: flData?.prediction||0, probability: flData?.probability||0};
+        const vaData = await (await fetch('/ai/vitals-analysis', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(vaPayload)})).json();
+
+        const statusIcon = {normal:'fa-circle-check', warning:'fa-triangle-exclamation', critical:'fa-circle-xmark'};
+        const vitalsHtml = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+          ${vaData.vitals.map(v=>`<div style="padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid ${v.color}33">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:.68rem;color:#64748B">${v.label}</span>
+              <span style="font-size:.62rem;color:${v.color}"><i class="fa-solid ${statusIcon[v.status]}"></i></span>
+            </div>
+            <div style="font-size:.9rem;font-weight:700;color:${v.color};font-family:'Space Grotesk',sans-serif">${v.value}<span style="font-size:.6rem;font-weight:400;color:#475569;margin-left:3px">${v.unit}</span></div>
+          </div>`).join('')}
+        </div>`;
+
+        const recsHtml = `<div style="space-y:6px">
+          ${vaData.recommendations.slice(0,3).map(r=>`<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.02);border:1px solid ${r.color}1A;margin-bottom:6px">
+            <i class="fa-solid ${r.icon} mt-0.5" style="color:${r.color};flex-shrink:0;font-size:.8rem"></i>
+            <div>
+              <p style="font-size:.75rem;font-weight:600;color:#F1F5F9">${r.title}</p>
+              <p style="font-size:.72rem;color:#64748B;line-height:1.4;margin-top:1px">${r.text}</p>
+            </div>
+          </div>`).join('')}
+        </div>`;
+
+        el.style.display = 'block';
+        el.innerHTML = flHtml + vitalsHtml + recsHtml;
+      } catch(e) {
+        el.style.display = 'block';
+        el.innerHTML = `<div style="font-size:.75rem;color:var(--red);padding:.5rem .75rem;border-radius:8px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2)"><i class="fa-solid fa-circle-xmark mr-1"></i> Analysis failed: ${e.message}</div>`;
+      }
+      btn.disabled=false; btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Analyze Patient';
+    }
   </script>
 </body>
 </html>

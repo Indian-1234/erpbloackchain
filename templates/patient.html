@@ -9,455 +9,662 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root {
-      --bg:      #07111E;
-      --sidebar: #09152A;
-      --card:    #0F1E35;
-      --border:  rgba(255,255,255,0.07);
-      --blue:    #3B82F6;
-      --emerald: #10B981;
-      --purple:  #8B5CF6;
-      --amber:   #F59E0B;
-      --red:     #EF4444;
-      --cyan:    #06B6D4;
-      --text:    #E2E8F0;
-      --muted:   #64748B;
-    }
-    * { box-sizing:border-box; }
-    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; }
-    .hfont { font-family:'Space Grotesk',sans-serif; }
+    :root{--bg:#07111E;--sidebar:#09152A;--card:#0F1E35;--border:rgba(255,255,255,0.07);--blue:#3B82F6;--em:#10B981;--purple:#8B5CF6;--amber:#F59E0B;--red:#EF4444;--cyan:#06B6D4;--text:#E2E8F0;--muted:#64748B;}
+    *{box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
+    .hfont{font-family:'Space Grotesk',sans-serif;}
 
     /* Sidebar */
-    .sidebar { background:var(--sidebar); border-right:1px solid var(--border); width:240px; flex-shrink:0; }
-    .nav-item { display:flex; align-items:center; gap:.75rem; padding:.625rem .875rem; border-radius:10px; font-size:.8125rem; font-weight:500; color:#64748B; transition:all .15s; text-decoration:none; }
-    .nav-item:hover { color:#E2E8F0; background:rgba(255,255,255,.04); }
-    .nav-item.active { color:var(--blue); background:rgba(59,130,246,.1); }
-    .nav-item .icon { width:18px; text-align:center; }
+    .sidebar{background:var(--sidebar);border-right:1px solid var(--border);width:220px;flex-shrink:0;transition:width .25s ease;overflow:hidden;}
+    .sidebar.collapsed{width:56px;}
+    .sidebar .lbl{transition:opacity .2s,width .2s;white-space:nowrap;overflow:hidden;}
+    .sidebar.collapsed .lbl{opacity:0;width:0;pointer-events:none;}
+    .sidebar.collapsed .avatar-block{justify-content:center;}
+    .sidebar.collapsed .avatar-block .av-text{display:none;}
+    .nav-item{display:flex;align-items:center;gap:.625rem;padding:.575rem .75rem;border-radius:9px;font-size:.8rem;font-weight:500;color:#64748B;transition:all .15s;text-decoration:none;cursor:pointer;}
+    .nav-item:hover{color:#E2E8F0;background:rgba(255,255,255,.04);}
+    .nav-item.active{color:var(--blue);background:rgba(59,130,246,.1);}
+    .nav-icon{width:20px;text-align:center;flex-shrink:0;font-size:.875rem;}
+
+    /* Tabs */
+    .tab-bar{display:flex;gap:4px;padding:4px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border);}
+    .tab-btn{padding:.4rem .85rem;border-radius:7px;font-size:.78rem;font-weight:600;font-family:'Space Grotesk',sans-serif;color:var(--muted);cursor:pointer;transition:all .18s;border:none;background:transparent;display:flex;align-items:center;gap:.4rem;white-space:nowrap;}
+    .tab-btn.active{background:var(--blue);color:#fff;}
+    .tab-btn:hover:not(.active){color:#E2E8F0;background:rgba(255,255,255,.06);}
+    .tab-pane{display:none;}
+    .tab-pane.active{display:block;}
+
+    /* 2-col grid */
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .span2{grid-column:1/-1;}
 
     /* Cards */
-    .section-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; margin-bottom:1.25rem; }
-    .section-card.accent-blue    { border-left:3px solid var(--blue); }
-    .section-card.accent-emerald { border-left:3px solid var(--emerald); }
-    .section-card.accent-cyan    { border-left:3px solid var(--cyan); }
-    .section-card.accent-amber   { border-left:3px solid var(--amber); }
-    .section-card.accent-red     { border-left:3px solid var(--red); }
-    .section-card.accent-purple  { border-left:3px solid var(--purple); }
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;}
+    .card.bl{border-left:3px solid var(--blue);}
+    .card.gem{border-left:3px solid var(--em);}
+    .card.pur{border-left:3px solid var(--purple);}
+    .card.amb{border-left:3px solid var(--amber);}
+    .card.red{border-left:3px solid var(--red);}
+    .card.cyn{border-left:3px solid var(--cyan);}
 
-    /* Section header */
-    .sec-header { display:flex; align-items:center; gap:.875rem; margin-bottom:1.25rem; }
-    .sec-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    .sec-title { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1rem; color:#F1F5F9; }
-    .sec-sub { font-size:.75rem; color:var(--muted); margin-top:.125rem; }
+    /* Card header */
+    .ch{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+    .ch-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.875rem;}
+    .ch-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:.9rem;color:#F1F5F9;}
+    .ch-sub{font-size:.7rem;color:var(--muted);margin-top:1px;}
 
-    /* Form */
-    .field-label { font-size:.8rem; font-weight:500; color:#94A3B8; display:block; margin-bottom:.375rem; }
-    .input-field { width:100%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:9px; padding:10px 14px; color:var(--text); outline:none; transition:all .2s; font-size:.875rem; font-family:'Inter',sans-serif; }
-    .input-field::placeholder { color:rgba(255,255,255,.2); }
-    .input-field:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+    /* Stat cards */
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;}
+    .stat-val{font-family:'Space Grotesk',sans-serif;font-size:1.375rem;font-weight:700;color:#F1F5F9;}
+    .stat-label{font-size:.72rem;color:var(--muted);font-weight:500;}
+
+    /* Forms */
+    .fl{font-size:.78rem;font-weight:500;color:#94A3B8;display:block;margin-bottom:.35rem;}
+    .inf{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:9px 13px;color:var(--text);outline:none;transition:all .2s;font-size:.85rem;font-family:'Inter',sans-serif;}
+    .inf::placeholder{color:rgba(255,255,255,.2);}
+    .inf:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
 
     /* Buttons */
-    .btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.625rem 1.25rem; border-radius:9px; font-size:.8125rem; font-weight:600; font-family:'Space Grotesk',sans-serif; transition:all .18s; cursor:pointer; border:none; }
-    .btn-blue   { background:var(--blue);    color:#fff; }
-    .btn-blue:hover   { background:#2563EB; }
-    .btn-green  { background:var(--emerald); color:#fff; }
-    .btn-green:hover  { background:#059669; }
-    .btn-cyan   { background:var(--cyan);    color:#fff; }
-    .btn-cyan:hover   { background:#0891B2; }
-    .btn-red    { background:rgba(239,68,68,.1); color:var(--red); border:1px solid rgba(239,68,68,.25); }
-    .btn-red:hover    { background:rgba(239,68,68,.2); }
-    .btn-amber  { background:var(--amber);   color:#0A0F1E; }
-    .btn-amber:hover  { background:#D97706; }
-    .btn-purple { background:linear-gradient(135deg,var(--purple),#7C3AED); color:#fff; }
-    .btn-purple:hover { opacity:.9; }
-    .btn-ghost  { background:rgba(255,255,255,.04); color:var(--text); border:1px solid var(--border); }
-    .btn-ghost:hover  { background:rgba(255,255,255,.07); }
-    .btn-full { width:100%; }
-    .btn:disabled { opacity:.5; cursor:not-allowed; }
-
-    /* Result panel */
-    .result-panel { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.25rem; }
-    .result-row { background:rgba(255,255,255,.025); border:1px solid var(--border); border-radius:9px; padding:.75rem 1rem; margin-bottom:.625rem; }
-    .result-label { font-size:.7rem; color:var(--muted); margin-bottom:.25rem; text-transform:uppercase; letter-spacing:.05em; }
-    .result-val { font-size:.8rem; color:var(--text); word-break:break-all; }
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;padding:.575rem 1rem;border-radius:8px;font-size:.8rem;font-weight:600;font-family:'Space Grotesk',sans-serif;transition:all .18s;cursor:pointer;border:none;}
+    .btn-w{width:100%;}
+    .b-blue{background:var(--blue);color:#fff;}
+    .b-blue:hover{background:#2563EB;}
+    .b-em{background:var(--em);color:#fff;}
+    .b-em:hover{background:#059669;}
+    .b-pur{background:var(--purple);color:#fff;}
+    .b-pur:hover{background:#7C3AED;}
+    .b-amb{background:var(--amber);color:#0A0F1E;}
+    .b-amb:hover{background:#D97706;}
+    .b-red{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);}
+    .b-red:hover{background:rgba(239,68,68,.2);}
+    .b-cyan{background:var(--cyan);color:#fff;}
+    .b-cyan:hover{background:#0891B2;}
+    .b-ghost{background:rgba(255,255,255,.04);color:var(--text);border:1px solid var(--border);}
+    .b-ghost:hover{background:rgba(255,255,255,.07);}
+    .btn:disabled{opacity:.5;cursor:not-allowed;}
 
     /* Badges */
-    .badge-green  { display:inline-flex; align-items:center; gap:.35rem; font-size:.7rem; padding:.25rem .625rem; border-radius:100px; background:rgba(16,185,129,.1);  color:var(--emerald); border:1px solid rgba(16,185,129,.2);  }
-    .badge-blue   { display:inline-flex; align-items:center; gap:.35rem; font-size:.7rem; padding:.25rem .625rem; border-radius:100px; background:rgba(59,130,246,.1);  color:var(--blue);    border:1px solid rgba(59,130,246,.2);  }
-    .badge-amber  { display:inline-flex; align-items:center; gap:.35rem; font-size:.7rem; padding:.25rem .625rem; border-radius:100px; background:rgba(245,158,11,.1); color:var(--amber);   border:1px solid rgba(245,158,11,.2); }
-    .badge-purple { display:inline-flex; align-items:center; gap:.35rem; font-size:.7rem; padding:.25rem .625rem; border-radius:100px; background:rgba(139,92,246,.1); color:var(--purple);  border:1px solid rgba(139,92,246,.2); }
-    .dot-pulse { width:6px; height:6px; border-radius:50%; animation:dotpulse 2s infinite; }
-    @keyframes dotpulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .badge-em{display:inline-flex;align-items:center;gap:.35rem;font-size:.68rem;padding:.2rem .55rem;border-radius:100px;background:rgba(16,185,129,.1);color:var(--em);border:1px solid rgba(16,185,129,.2);}
+    .badge-blue{display:inline-flex;align-items:center;gap:.35rem;font-size:.68rem;padding:.2rem .55rem;border-radius:100px;background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2);}
+    .badge-pur{display:inline-flex;align-items:center;gap:.35rem;font-size:.68rem;padding:.2rem .55rem;border-radius:100px;background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.2);}
+    .badge-amb{display:inline-flex;align-items:center;gap:.35rem;font-size:.68rem;padding:.2rem .55rem;border-radius:100px;background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2);}
+    .dp{width:6px;height:6px;border-radius:50%;animation:dpa 2s infinite;}
+    @keyframes dpa{0%,100%{opacity:1}50%{opacity:.3}}
 
-    ::-webkit-scrollbar { width:5px; }
-    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.07); border-radius:3px; }
-    @keyframes slideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-    .anim { animation:slideUp .4s ease forwards; }
+    /* Result panel */
+    .res-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
+    .res-row{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:9px;padding:.7rem 1rem;margin-bottom:.55rem;}
+    .rl{font-size:.68rem;color:var(--muted);margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.05em;}
+    .rv{font-size:.8rem;color:var(--text);word-break:break-all;}
+
+    /* Alert boxes */
+    .alert{display:flex;align-items:flex-start;gap:.6rem;padding:.75rem 1rem;border-radius:10px;font-size:.78rem;margin-bottom:12px;}
+    .a-red{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);color:#FCA5A5;}
+    .a-amb{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);color:#FCD34D;}
+    .a-em{background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);color:#6EE7B7;}
+    .a-pur{background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);color:#C4B5FD;}
+
+    /* Symptom chips */
+    .sym-chip{padding:.3rem .7rem;border-radius:100px;font-size:.72rem;font-weight:500;cursor:pointer;border:1px solid rgba(6,182,212,.25);color:#94A3B8;background:rgba(6,182,212,.05);transition:all .15s;font-family:'Inter',sans-serif;}
+    .sym-chip:hover{border-color:rgba(6,182,212,.5);color:var(--cyan);}
+    .sym-chip.selected{background:rgba(6,182,212,.15);border-color:var(--cyan);color:var(--cyan);font-weight:600;}
+
+    /* Vitals mini bar */
+    .vital-bar-bg{height:5px;border-radius:3px;background:rgba(255,255,255,.07);margin-top:5px;overflow:hidden;}
+    .vital-bar-fill{height:100%;border-radius:3px;transition:width .5s;}
+
+    ::-webkit-scrollbar{width:5px;}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:3px;}
+    @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .anim{animation:slideUp .4s ease forwards;}
   </style>
 </head>
-<body class="flex min-h-screen antialiased">
+<body class="flex min-h-screen antialiased" data-has-result="{{ 'true' if isCard else 'false' }}">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar hidden lg:flex flex-col sticky top-0 h-screen overflow-y-auto">
-    <!-- Logo -->
-    <div class="px-5 py-5" style="border-bottom:1px solid var(--border)">
-      <a href="/" class="flex items-center gap-2 hfont font-bold text-base">
-        <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:var(--blue)">
-          <i class="fa-solid fa-heart-pulse text-white text-xs"></i>
+  <!-- ═══ SIDEBAR ═══════════════════════════════════════════════════ -->
+  <aside class="sidebar flex flex-col sticky top-0 h-screen overflow-hidden" id="sidebar">
+
+    <!-- Logo row -->
+    <div class="flex items-center justify-between px-3 py-4" style="border-bottom:1px solid var(--border);min-height:56px">
+      <a href="/" class="flex items-center gap-2 hfont font-bold text-sm lbl">
+        <div class="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style="background:var(--blue)">
+          <i class="fa-solid fa-heart-pulse text-white" style="font-size:.6rem"></i>
         </div>
-        <span class="text-white">EHR<span style="color:var(--blue)">Chain</span></span>
+        <span class="text-white lbl">EHR<span style="color:var(--blue)">Chain</span></span>
       </a>
+      <button onclick="toggleSidebar()" id="sidebar-toggle"
+        class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors shrink-0"
+        style="background:rgba(255,255,255,.06);border:1px solid var(--border);color:#94A3B8"
+        aria-label="Toggle sidebar">
+        <i class="fa-solid fa-chevron-left" id="toggle-icon" style="font-size:.65rem"></i>
+      </button>
     </div>
 
     <!-- Patient identity -->
-    <div class="px-5 py-5" style="border-bottom:1px solid var(--border)">
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center hfont font-bold text-white mb-2.5 text-sm" style="background:var(--emerald)">P</div>
-      <p class="font-semibold text-white text-sm">Patient</p>
-      <p class="text-xs mt-0.5 font-mono break-all" style="color:var(--muted)">{{ username[:22] if username else '—' }}…</p>
+    <div class="px-3 py-4 avatar-block flex items-center gap-2.5" style="border-bottom:1px solid var(--border)">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center hfont font-bold text-white shrink-0 text-xs" style="background:var(--em)">P</div>
+      <div class="av-text lbl min-w-0">
+        <p class="font-semibold text-white text-xs leading-snug">Patient</p>
+        <p class="text-xs font-mono truncate" style="color:var(--muted);font-size:.65rem">{{ username[:20] if username else '—' }}…</p>
+      </div>
     </div>
 
     <!-- Nav -->
-    <nav class="flex-1 px-3 py-4 space-y-0.5">
-      <a href="#" class="nav-item active"><span class="icon"><i class="fa-solid fa-gauge-high"></i></span> Dashboard</a>
-      <a href="#section-visit" class="nav-item"><span class="icon"><i class="fa-solid fa-calendar-plus"></i></span> New Visit</a>
-      <a href="#section-doctors" class="nav-item"><span class="icon"><i class="fa-solid fa-user-doctor"></i></span> Manage Doctors</a>
-      <a href="#section-records" class="nav-item"><span class="icon"><i class="fa-solid fa-file-medical"></i></span> My Records</a>
-      <a href="#section-ai" class="nav-item"><span class="icon"><i class="fa-solid fa-heart-pulse"></i></span> AI Risk Check</a>
+    <nav class="flex-1 px-2 py-3 space-y-0.5">
+      <a class="nav-item active" onclick="showTab('overview');setActive(this)" id="nav-overview">
+        <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+        <span class="lbl">Overview</span>
+      </a>
+      <a class="nav-item" onclick="showTab('records');setActive(this)" id="nav-records">
+        <span class="nav-icon"><i class="fa-solid fa-file-medical"></i></span>
+        <span class="lbl">Records</span>
+      </a>
+      <a class="nav-item" onclick="showTab('access');setActive(this)" id="nav-access">
+        <span class="nav-icon"><i class="fa-solid fa-user-shield"></i></span>
+        <span class="lbl">Access Control</span>
+      </a>
+      <a class="nav-item" onclick="showTab('ai');setActive(this)" id="nav-ai">
+        <span class="nav-icon"><i class="fa-solid fa-heart-pulse"></i></span>
+        <span class="lbl">AI Risk</span>
+      </a>
     </nav>
 
-    <div class="px-3 pb-5">
-      <a href="/" class="nav-item"><span class="icon"><i class="fa-solid fa-right-from-bracket"></i></span> Log Out</a>
+    <div class="px-2 pb-4">
+      <a href="/" class="nav-item">
+        <span class="nav-icon"><i class="fa-solid fa-right-from-bracket"></i></span>
+        <span class="lbl">Log Out</span>
+      </a>
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
+  <!-- ═══ MAIN ══════════════════════════════════════════════════════ -->
   <div class="flex-1 flex flex-col min-h-screen overflow-x-hidden">
 
     <!-- Top bar -->
-    <header class="flex items-center justify-between px-6 py-4 sticky top-0 z-20" style="background:rgba(7,17,30,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)">
+    <header class="flex items-center justify-between px-5 py-3 sticky top-0 z-20"
+      style="background:rgba(7,17,30,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);min-height:56px">
       <div>
-        <h1 class="hfont font-bold text-lg text-white">Patient Dashboard</h1>
-        <p class="text-xs mt-0.5 font-mono" style="color:var(--muted)">{{ username }}</p>
+        <h1 class="hfont font-bold text-base text-white leading-tight">Patient Dashboard</h1>
+        <p class="font-mono mt-0.5" style="font-size:.65rem;color:var(--muted)">{{ username }}</p>
       </div>
-      <div class="flex items-center gap-3">
-        <span class="badge-green hidden sm:inline-flex">
-          <span class="dot-pulse" style="background:var(--emerald)"></span>
-          {{ contract_address[:12] if contract_address else '—' }}…
+      <div class="flex items-center gap-2">
+        {% if contract_address %}
+        <span class="badge-em hidden sm:inline-flex">
+          <span class="dp" style="background:var(--em)"></span>{{ contract_address[:10] }}…
         </span>
-        <a href="/" class="btn btn-ghost py-2 px-3" style="font-size:.8rem">
-          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        {% endif %}
+        <a href="/" class="btn b-ghost" style="padding:.375rem .75rem;font-size:.75rem">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span class="hidden sm:inline">Logout</span>
         </a>
       </div>
     </header>
 
-    <!-- Body -->
-    <div class="flex flex-1 overflow-y-auto">
+    <!-- Content + Results wrapper -->
+    <div class="flex flex-1 overflow-hidden">
 
-      <!-- Forms column -->
-      <div class="flex-1 p-6 max-w-2xl">
+      <!-- ─── Left: tabs + panes ─────────────────────────────────── -->
+      <div class="flex-1 flex flex-col overflow-y-auto">
 
-        <!-- SECTION A: Start Visit -->
-        <section id="section-visit" class="section-card accent-emerald anim">
-          <div class="flex items-start justify-between mb-4">
-            <div class="sec-header" style="margin-bottom:0">
-              <div class="sec-icon" style="background:rgba(16,185,129,.12)"><i class="fa-solid fa-calendar-plus" style="color:var(--emerald)"></i></div>
-              <div>
-                <p class="sec-title">Start New Visit</p>
-                <p class="sec-sub">Creates a new on-chain medical record</p>
+        <!-- Tab bar -->
+        <div class="px-5 pt-4 pb-0">
+          <div class="tab-bar inline-flex">
+            <button class="tab-btn active" id="tb-overview" onclick="showTab('overview')">
+              <i class="fa-solid fa-gauge-high"></i> Overview
+            </button>
+            <button class="tab-btn" id="tb-records" onclick="showTab('records')">
+              <i class="fa-solid fa-file-medical"></i> Records
+            </button>
+            <button class="tab-btn" id="tb-access" onclick="showTab('access')">
+              <i class="fa-solid fa-user-shield"></i> Access
+            </button>
+            <button class="tab-btn" id="tb-ai" onclick="showTab('ai')">
+              <i class="fa-solid fa-heart-pulse"></i> AI Risk
+            </button>
+          </div>
+        </div>
+
+        <!-- ──── TAB: Overview ─────────────────────────────────── -->
+        <div class="tab-pane active p-5 space-y-4" id="pane-overview">
+
+          <!-- Stats row -->
+          <div class="g2" style="grid-template-columns:repeat(3,1fr)">
+            <div class="stat-card">
+              <div class="stat-label"><i class="fa-solid fa-file-contract mr-1.5" style="color:var(--em)"></i>Contract</div>
+              <div class="stat-val" style="font-size:.85rem;font-family:'Inter',sans-serif;color:var(--em)">
+                {% if contract_address %}{{ contract_address[:14] }}…{% else %}—{% endif %}
               </div>
             </div>
-            <span class="badge-green shrink-0"><span class="dot-pulse" style="background:var(--emerald)"></span>On-chain</span>
-          </div>
-          <form action="" method="post" role="form">
-            {{ form.csrf_token() }}
-            <div class="space-y-3">
-              <div>
-                <label for="start_visit" class="field-label">Appointment Date &amp; Time</label>
-                {{ form.start_visit(id="start_visit", class="input-field", placeholder="MM/DD/YYYY hh:mm", **{"aria-label":"Appointment Date and Time"}) }}
-              </div>
-              <button type="submit" name="action1" value="VALUE1" class="btn btn-green" aria-label="Start Visit">
-                <i class="fa-solid fa-play"></i> Start Visit
-              </button>
+            <div class="stat-card">
+              <div class="stat-label"><i class="fa-solid fa-robot mr-1.5" style="color:var(--purple)"></i>AI Model</div>
+              <div class="stat-val" id="ov-model-status" style="font-size:1rem">—</div>
             </div>
-          </form>
-        </section>
+            <div class="stat-card">
+              <div class="stat-label"><i class="fa-solid fa-user-doctor mr-1.5" style="color:var(--blue)"></i>Network</div>
+              <div class="stat-val" style="font-size:.8rem;color:var(--blue)">Ethereum</div>
+            </div>
+          </div>
 
-        <!-- SECTION B: Grant Doctor Access -->
-        <section id="section-doctors" class="section-card accent-blue anim" style="animation-delay:.04s">
-          <div class="flex items-start justify-between mb-4">
-            <div class="sec-header" style="margin-bottom:0">
-              <div class="sec-icon" style="background:rgba(59,130,246,.12)"><i class="fa-solid fa-user-plus" style="color:var(--blue)"></i></div>
-              <div>
-                <p class="sec-title">Grant Doctor Access</p>
-                <p class="sec-sub">Updates smart contract permissions</p>
-              </div>
-            </div>
-            <span class="badge-blue shrink-0"><span class="dot-pulse" style="background:var(--blue)"></span>On-chain</span>
-          </div>
-          <form action="" method="post" role="form">
-            {{ form.csrf_token() }}
-            <div class="space-y-3">
-              <div>
-                <label for="add_doctors" class="field-label">Doctor's Blockchain Address</label>
-                {{ form.add_doctors(id="add_doctors", class="input-field", placeholder="0x... doctor's wallet address", **{"aria-label":"Doctor Address to Add"}) }}
-              </div>
-              <button type="submit" name="action2" value="VALUE2" class="btn btn-blue" aria-label="Grant Doctor Access">
-                <i class="fa-solid fa-user-plus"></i> Grant Access
-              </button>
-            </div>
-          </form>
-        </section>
+          <!-- Quick actions grid -->
+          <div class="g2">
 
-        <!-- SECTION C: Revoke Doctor Access -->
-        <section class="section-card accent-red anim" style="animation-delay:.06s">
-          <div class="sec-header">
-            <div class="sec-icon" style="background:rgba(239,68,68,.1)"><i class="fa-solid fa-user-minus" style="color:var(--red)"></i></div>
-            <div>
-              <p class="sec-title">Revoke Doctor Access</p>
-              <p class="sec-sub">Removes doctor from authorized list</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-2.5 p-3 rounded-xl mb-4 text-xs" style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18);color:#FCA5A5">
-            <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0" style="color:var(--red)"></i>
-            This will permanently block the doctor from reading your records.
-          </div>
-          <form action="" method="post" role="form">
-            {{ form.csrf_token() }}
-            <div class="space-y-3">
-              <div>
-                <label for="remove_doctors" class="field-label">Doctor's Blockchain Address</label>
-                {{ form.remove_doctors(id="remove_doctors", class="input-field", placeholder="0x... address to revoke", **{"aria-label":"Doctor Address to Remove"}) }}
+            <!-- Start Visit -->
+            <div class="card gem anim">
+              <div class="ch">
+                <div class="ch-icon" style="background:rgba(16,185,129,.12)"><i class="fa-solid fa-calendar-plus" style="color:var(--em)"></i></div>
+                <div><p class="ch-title">New Visit</p><p class="ch-sub">Create on-chain record</p></div>
               </div>
-              <button type="submit" name="action3" value="VALUE3" class="btn btn-red" aria-label="Revoke Doctor Access">
-                <i class="fa-solid fa-user-minus"></i> Revoke Access
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <!-- SECTION D: Manage Auditors -->
-        <section class="section-card accent-amber anim" style="animation-delay:.08s">
-          <div class="sec-header">
-            <div class="sec-icon" style="background:rgba(245,158,11,.12)"><i class="fa-solid fa-magnifying-glass-chart" style="color:var(--amber)"></i></div>
-            <div>
-              <p class="sec-title">Manage Auditors</p>
-              <p class="sec-sub">Add or remove third-party auditors</p>
-            </div>
-          </div>
-          <div class="grid sm:grid-cols-2 gap-4">
-            <form action="" method="post" role="form">
-              {{ form.csrf_token() }}
-              <div class="space-y-3">
-                <div>
-                  <label for="add_audits" class="field-label">Add Auditor ID</label>
-                  {{ form.add_audits(id="add_audits", class="input-field", placeholder="Audit ID", **{"aria-label":"Audit ID to Add"}) }}
+              <form action="" method="post">
+                {{ form.csrf_token() }}
+                <div class="space-y-2.5">
+                  <div>
+                    <label class="fl" for="ov-visit">Appointment Date &amp; Time</label>
+                    {{ form.start_visit(id="ov-visit", class="inf", placeholder="MM/DD/YYYY hh:mm") }}
+                  </div>
+                  <button type="submit" name="action1" value="VALUE1" class="btn b-em btn-w">
+                    <i class="fa-solid fa-play"></i> Start Visit
+                  </button>
                 </div>
-                <button type="submit" name="action4" value="VALUE4" class="btn btn-amber btn-full" aria-label="Add Auditor">
+              </form>
+            </div>
+
+            <!-- AI Risk quick -->
+            <div class="card pur anim" style="animation-delay:.04s">
+              <div class="ch">
+                <div class="ch-icon" style="background:rgba(139,92,246,.12)"><i class="fa-solid fa-heart-pulse" style="color:var(--purple)"></i></div>
+                <div><p class="ch-title">AI Risk Check</p><p class="ch-sub">Federated Learning model</p></div>
+              </div>
+              <div id="ov-ai-banner" class="alert a-amb text-xs" style="margin-bottom:8px">
+                <i class="fa-solid fa-circle-notch fa-spin mt-0.5 shrink-0"></i> Checking model…
+              </div>
+              <button type="button" onclick="showTab('ai')" class="btn b-pur btn-w">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Open AI Risk Tab
+              </button>
+            </div>
+
+            <!-- Contract info -->
+            <div class="card bl anim" style="animation-delay:.06s">
+              <div class="ch">
+                <div class="ch-icon" style="background:rgba(59,130,246,.12)"><i class="fa-solid fa-file-contract" style="color:var(--blue)"></i></div>
+                <div><p class="ch-title">My Contract</p><p class="ch-sub">Smart contract address</p></div>
+              </div>
+              {% if contract_address %}
+              <p class="font-mono text-xs break-all" style="color:var(--blue);margin-bottom:8px">{{ contract_address }}</p>
+              <button onclick="copyText('{{ contract_address }}')" class="btn b-ghost btn-w" style="color:var(--blue);border-color:rgba(59,130,246,.25)">
+                <i class="fa-solid fa-copy"></i> Copy Address
+              </button>
+              {% else %}
+              <p class="text-xs" style="color:var(--muted)">No contract deployed yet.</p>
+              {% endif %}
+            </div>
+
+            <!-- Blockchain status -->
+            <div class="card anim" style="animation-delay:.08s">
+              <div class="ch">
+                <div class="ch-icon" style="background:rgba(16,185,129,.1)"><i class="fa-solid fa-link" style="color:var(--em)"></i></div>
+                <div><p class="ch-title">Blockchain</p><p class="ch-sub">Network status</p></div>
+              </div>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs" style="padding:.5rem .75rem;background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.15);border-radius:8px">
+                  <span style="color:var(--muted)">Status</span>
+                  <span class="badge-em"><span class="dp" style="background:var(--em)"></span> Live</span>
+                </div>
+                <div class="flex items-center justify-between text-xs" style="padding:.5rem .75rem;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px">
+                  <span style="color:var(--muted)">Network</span>
+                  <span class="font-mono" style="color:var(--blue)">Ganache</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ──── TAB: Records ──────────────────────────────────── -->
+        <div class="tab-pane p-5 space-y-4" id="pane-records">
+
+          <div class="g2">
+
+            <!-- Print record -->
+            <div class="card anim">
+              <div class="ch">
+                <div class="ch-icon" style="background:rgba(59,130,246,.1)"><i class="fa-solid fa-print" style="color:var(--blue)"></i></div>
+                <div><p class="ch-title">Print Record</p><p class="ch-sub">Retrieve &amp; display record</p></div>
+              </div>
+              <form action="" method="post" class="space-y-2.5">
+                {{ form.csrf_token() }}
+                <div>
+                  <label class="fl" for="print_record">Record ID / Hash</label>
+                  {{ form.print_record(id="print_record", class="inf", placeholder="0x… record ID") }}
+                </div>
+                <button type="submit" name="action6" value="VALUE6" class="btn b-ghost btn-w" style="color:var(--blue);border-color:rgba(59,130,246,.25)">
+                  <i class="fa-solid fa-print"></i> Print
+                </button>
+              </form>
+            </div>
+
+            <!-- Delete record -->
+            <div class="card red anim" style="animation-delay:.04s">
+              <div class="ch">
+                <div class="ch-icon" style="background:rgba(239,68,68,.1)"><i class="fa-solid fa-trash-can" style="color:var(--red)"></i></div>
+                <div><p class="ch-title">Delete Record</p><p class="ch-sub">Permanently remove</p></div>
+              </div>
+              <div class="alert a-red" style="margin-bottom:10px">
+                <i class="fa-solid fa-triangle-exclamation shrink-0 mt-0.5"></i>
+                This action is permanent and cannot be undone.
+              </div>
+              <form action="" method="post" class="space-y-2.5">
+                {{ form.csrf_token() }}
+                <div>
+                  <label class="fl" for="delete_record">Record ID / Hash</label>
+                  {{ form.delete_record(id="delete_record", class="inf", placeholder="0x… record ID") }}
+                </div>
+                <button type="submit" name="action7" value="VALUE7" class="btn b-red btn-w">
+                  <i class="fa-solid fa-trash"></i> Delete
+                </button>
+              </form>
+            </div>
+
+            <!-- New visit (also in records for convenience) -->
+            <div class="card gem span2 anim" style="animation-delay:.06s">
+              <div class="ch">
+                <div class="ch-icon" style="background:rgba(16,185,129,.12)"><i class="fa-solid fa-calendar-plus" style="color:var(--em)"></i></div>
+                <div><p class="ch-title">Start New Visit</p><p class="ch-sub">Creates a new on-chain medical record entry</p></div>
+                <span class="badge-em ml-auto"><span class="dp" style="background:var(--em)"></span> On-chain</span>
+              </div>
+              <form action="" method="post">
+                {{ form.csrf_token() }}
+                <div class="g2 gap-sm" style="align-items:end">
+                  <div>
+                    <label class="fl" for="start_visit">Appointment Date &amp; Time</label>
+                    {{ form.start_visit(id="start_visit", class="inf", placeholder="MM/DD/YYYY hh:mm") }}
+                  </div>
+                  <button type="submit" name="action1" value="VALUE1" class="btn b-em">
+                    <i class="fa-solid fa-play"></i> Start Visit
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ──── TAB: Access Control ───────────────────────────── -->
+        <div class="tab-pane p-5 space-y-4" id="pane-access">
+
+          <div class="g2">
+
+            <!-- Grant doctor -->
+            <div class="card bl anim">
+              <div class="ch">
+                <div class="ch-icon" style="background:rgba(59,130,246,.12)"><i class="fa-solid fa-user-plus" style="color:var(--blue)"></i></div>
+                <div><p class="ch-title">Grant Doctor</p><p class="ch-sub">Add to authorized list</p></div>
+              </div>
+              <form action="" method="post" class="space-y-2.5">
+                {{ form.csrf_token() }}
+                <div>
+                  <label class="fl" for="add_doctors">Doctor's Blockchain Address</label>
+                  {{ form.add_doctors(id="add_doctors", class="inf", placeholder="0x… doctor wallet") }}
+                </div>
+                <button type="submit" name="action2" value="VALUE2" class="btn b-blue btn-w">
+                  <i class="fa-solid fa-user-plus"></i> Grant Access
+                </button>
+              </form>
+            </div>
+
+            <!-- Revoke doctor -->
+            <div class="card red anim" style="animation-delay:.04s">
+              <div class="ch">
+                <div class="ch-icon" style="background:rgba(239,68,68,.1)"><i class="fa-solid fa-user-minus" style="color:var(--red)"></i></div>
+                <div><p class="ch-title">Revoke Doctor</p><p class="ch-sub">Remove from authorized list</p></div>
+              </div>
+              <div class="alert a-red" style="margin-bottom:10px">
+                <i class="fa-solid fa-triangle-exclamation shrink-0 mt-0.5"></i>
+                Doctor will no longer be able to view your records.
+              </div>
+              <form action="" method="post" class="space-y-2.5">
+                {{ form.csrf_token() }}
+                <div>
+                  <label class="fl" for="remove_doctors">Doctor's Blockchain Address</label>
+                  {{ form.remove_doctors(id="remove_doctors", class="inf", placeholder="0x… address to revoke") }}
+                </div>
+                <button type="submit" name="action3" value="VALUE3" class="btn b-red btn-w">
+                  <i class="fa-solid fa-user-minus"></i> Revoke Access
+                </button>
+              </form>
+            </div>
+
+            <!-- Add auditor -->
+            <div class="card amb anim" style="animation-delay:.06s">
+              <div class="ch">
+                <div class="ch-icon" style="background:rgba(245,158,11,.12)"><i class="fa-solid fa-magnifying-glass-chart" style="color:var(--amber)"></i></div>
+                <div><p class="ch-title">Add Auditor</p><p class="ch-sub">Grant third-party audit access</p></div>
+              </div>
+              <form action="" method="post" class="space-y-2.5">
+                {{ form.csrf_token() }}
+                <div>
+                  <label class="fl" for="add_audits">Auditor ID</label>
+                  {{ form.add_audits(id="add_audits", class="inf", placeholder="Audit ID") }}
+                </div>
+                <button type="submit" name="action4" value="VALUE4" class="btn b-amb btn-w">
                   <i class="fa-solid fa-plus"></i> Add Auditor
                 </button>
+              </form>
+            </div>
+
+            <!-- Remove auditor -->
+            <div class="card anim" style="animation-delay:.08s">
+              <div class="ch">
+                <div class="ch-icon" style="background:rgba(255,255,255,.07)"><i class="fa-solid fa-user-slash" style="color:#94A3B8"></i></div>
+                <div><p class="ch-title">Remove Auditor</p><p class="ch-sub">Revoke audit access</p></div>
               </div>
-            </form>
-            <form action="" method="post" role="form">
-              {{ form.csrf_token() }}
-              <div class="space-y-3">
+              <form action="" method="post" class="space-y-2.5">
+                {{ form.csrf_token() }}
                 <div>
-                  <label for="remove_audits" class="field-label">Remove Auditor ID</label>
-                  {{ form.remove_audits(id="remove_audits", class="input-field", placeholder="Audit ID", **{"aria-label":"Audit ID to Remove"}) }}
+                  <label class="fl" for="remove_audits">Auditor ID</label>
+                  {{ form.remove_audits(id="remove_audits", class="inf", placeholder="Audit ID") }}
                 </div>
-                <button type="submit" name="action5" value="VALUE5" class="btn btn-ghost btn-full" style="color:var(--amber);border-color:rgba(245,158,11,.25)" aria-label="Remove Auditor">
+                <button type="submit" name="action5" value="VALUE5" class="btn b-ghost btn-w" style="color:var(--amber);border-color:rgba(245,158,11,.25)">
                   <i class="fa-solid fa-minus"></i> Remove Auditor
                 </button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ──── TAB: AI Risk ──────────────────────────────────── -->
+        <div class="tab-pane p-5 space-y-4" id="pane-ai">
+
+          <!-- ── SYMPTOM CHECKER ──────────────────────────────── -->
+          <div class="card cyn anim">
+            <div class="ch">
+              <div class="ch-icon" style="background:rgba(6,182,212,.12)"><i class="fa-solid fa-stethoscope" style="color:var(--cyan)"></i></div>
+              <div><p class="ch-title">AI Symptom Checker</p><p class="ch-sub">Select symptoms or type them — instant condition analysis</p></div>
+              <span class="badge-blue ml-auto" style="color:var(--cyan);border-color:rgba(6,182,212,.25);background:rgba(6,182,212,.1)">Rule-based AI</span>
+            </div>
+
+            <!-- Quick-select chips -->
+            <div id="symptom-chips" class="flex flex-wrap gap-1.5 mb-3">
+              <button type="button" onclick="toggleSymptom(this,'Fever')" class="sym-chip">Fever</button>
+              <button type="button" onclick="toggleSymptom(this,'Headache')" class="sym-chip">Headache</button>
+              <button type="button" onclick="toggleSymptom(this,'Fatigue')" class="sym-chip">Fatigue</button>
+              <button type="button" onclick="toggleSymptom(this,'Cough')" class="sym-chip">Cough</button>
+              <button type="button" onclick="toggleSymptom(this,'Chest Pain')" class="sym-chip">Chest Pain</button>
+              <button type="button" onclick="toggleSymptom(this,'Shortness of Breath')" class="sym-chip">Shortness of Breath</button>
+              <button type="button" onclick="toggleSymptom(this,'Nausea')" class="sym-chip">Nausea</button>
+              <button type="button" onclick="toggleSymptom(this,'Dizziness')" class="sym-chip">Dizziness</button>
+              <button type="button" onclick="toggleSymptom(this,'Joint Pain')" class="sym-chip">Joint Pain</button>
+              <button type="button" onclick="toggleSymptom(this,'Palpitations')" class="sym-chip">Palpitations</button>
+              <button type="button" onclick="toggleSymptom(this,'Muscle Aches')" class="sym-chip">Muscle Aches</button>
+              <button type="button" onclick="toggleSymptom(this,'Blurred Vision')" class="sym-chip">Blurred Vision</button>
+              <button type="button" onclick="toggleSymptom(this,'Excessive Thirst')" class="sym-chip">Excessive Thirst</button>
+              <button type="button" onclick="toggleSymptom(this,'Back Pain')" class="sym-chip">Back Pain</button>
+              <button type="button" onclick="toggleSymptom(this,'Abdominal Pain')" class="sym-chip">Abdominal Pain</button>
+              <button type="button" onclick="toggleSymptom(this,'Anxiety')" class="sym-chip">Anxiety</button>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:flex-end">
+              <div style="flex:1">
+                <label class="fl" for="symptom-input">Or describe symptoms in your own words</label>
+                <input type="text" id="symptom-input" class="inf" placeholder="e.g. chest pain, shortness of breath, sweating…"
+                  onkeydown="if(event.key==='Enter'){runSymptomCheck();}">
               </div>
-            </form>
-          </div>
-        </section>
-
-        <!-- SECTION E: My Records -->
-        <section id="section-records" class="section-card anim" style="animation-delay:.10s">
-          <div class="sec-header">
-            <div class="sec-icon" style="background:rgba(255,255,255,.06)"><i class="fa-solid fa-file-medical" style="color:#94A3B8"></i></div>
-            <div>
-              <p class="sec-title">My Medical Records</p>
-              <p class="sec-sub">Print or delete a specific record</p>
+              <button type="button" onclick="runSymptomCheck()" id="sym-btn" class="btn b-cyan shrink-0">
+                <i class="fa-solid fa-magnifying-glass-chart"></i> Analyze
+              </button>
             </div>
-          </div>
-          <div class="grid sm:grid-cols-2 gap-4">
-            <form action="" method="post" role="form">
-              {{ form.csrf_token() }}
-              <div class="space-y-3">
-                <div>
-                  <label for="print_record" class="field-label">Print Record</label>
-                  {{ form.print_record(id="print_record", class="input-field", placeholder="0x... record ID", **{"aria-label":"Record ID to Print"}) }}
-                </div>
-                <button type="submit" name="action6" value="VALUE6" class="btn btn-ghost btn-full" aria-label="Print Medical Record">
-                  <i class="fa-solid fa-print"></i> Print Record
-                </button>
-              </div>
-            </form>
-            <form action="" method="post" role="form">
-              {{ form.csrf_token() }}
-              <div class="space-y-3">
-                <div>
-                  <label for="delete_record" class="field-label">Delete Record</label>
-                  {{ form.delete_record(id="delete_record", class="input-field", placeholder="0x... record ID", **{"aria-label":"Record ID to Delete"}) }}
-                </div>
-                <button type="submit" name="action7" value="VALUE7" class="btn btn-red btn-full" aria-label="Delete Medical Record">
-                  <i class="fa-solid fa-trash"></i> Delete Record
-                </button>
-              </div>
-            </form>
-          </div>
-        </section>
 
-        <!-- SECTION F: AI Risk Assessment -->
-        <section id="section-ai" class="section-card accent-purple anim" style="animation-delay:.12s">
-          <div class="flex items-start justify-between mb-4">
-            <div class="sec-header" style="margin-bottom:0">
-              <div class="sec-icon" style="background:rgba(139,92,246,.14)"><i class="fa-solid fa-heart-pulse" style="color:var(--purple)"></i></div>
-              <div>
-                <p class="sec-title">AI Disease Risk Assessment</p>
-                <p class="sec-sub">Powered by Federated Learning — your data stays private</p>
-              </div>
-            </div>
-            <span class="badge-purple shrink-0"><span class="dot-pulse" style="background:var(--purple)"></span>FL Model</span>
+            <div id="sym-result" style="display:none;margin-top:14px"></div>
           </div>
 
-          <!-- Model availability banner -->
-          <div id="ai-model-check" class="flex items-center gap-2.5 p-3 rounded-xl mb-4 text-xs" style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);color:var(--amber)">
-            <i class="fa-solid fa-circle-notch fa-spin"></i> Checking model availability…
+          <!-- ── FL VITALS RISK ───────────────────────────────── -->
+          <div class="card pur anim" style="animation-delay:.04s">
+            <div class="ch">
+              <div class="ch-icon" style="background:rgba(139,92,246,.14)"><i class="fa-solid fa-heart-pulse" style="color:var(--purple)"></i></div>
+              <div><p class="ch-title">Federated AI — Disease Risk Assessment</p><p class="ch-sub">ML model trained across hospitals — data never leaves devices</p></div>
+              <span class="badge-pur ml-auto"><span class="dp" style="background:var(--purple)"></span>FL Model</span>
+            </div>
+
+            <div id="ai-model-banner" class="alert a-amb" style="margin-bottom:12px">
+              <i class="fa-solid fa-circle-notch fa-spin shrink-0 mt-0.5"></i> Checking model availability…
+            </div>
+
+            <div class="g2 gap-sm" style="margin-bottom:12px">
+              <div><label class="fl" for="ai-age">Age (years)</label>
+                <input type="number" id="ai-age" class="inf" value="45" min="18" max="95" step="1"></div>
+              <div><label class="fl" for="ai-sbp">Systolic BP (mmHg)</label>
+                <input type="number" id="ai-sbp" class="inf" value="120" min="80" max="200" step="1"></div>
+              <div><label class="fl" for="ai-dbp">Diastolic BP (mmHg)</label>
+                <input type="number" id="ai-dbp" class="inf" value="80" min="50" max="130" step="1"></div>
+              <div><label class="fl" for="ai-hr">Heart Rate (bpm)</label>
+                <input type="number" id="ai-hr" class="inf" value="72" min="45" max="150" step="1"></div>
+              <div><label class="fl" for="ai-glucose">Glucose (mg/dL)</label>
+                <input type="number" id="ai-glucose" class="inf" value="95" min="60" max="300" step="1"></div>
+              <div><label class="fl" for="ai-bmi">BMI (kg/m²)</label>
+                <input type="number" id="ai-bmi" class="inf" value="24" min="15" max="50" step="0.1"></div>
+              <div><label class="fl" for="ai-chol">Cholesterol (mg/dL)</label>
+                <input type="number" id="ai-chol" class="inf" value="185" min="100" max="350" step="1"></div>
+              <div><label class="fl" for="ai-o2">O₂ Saturation (%)</label>
+                <input type="number" id="ai-o2" class="inf" value="98" min="85" max="100" step="0.1"></div>
+            </div>
+
+            <button type="button" onclick="runFullAnalysis()" id="ai-predict-btn" class="btn b-pur btn-w">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Run Full AI Analysis
+            </button>
+
+            <!-- FL Risk result -->
+            <div id="ai-fl-result" style="display:none;margin-top:14px"></div>
           </div>
 
-          <!-- Vitals grid -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="field-label">Age (years)</label>
-              <input type="number" id="ai-age" class="input-field" value="45" min="18" max="95" step="1" aria-label="Age">
+          <!-- ── VITALS BREAKDOWN (shown after analysis) ────────── -->
+          <div id="ai-vitals-breakdown" class="card anim" style="display:none;animation-delay:.04s">
+            <div class="ch">
+              <div class="ch-icon" style="background:rgba(6,182,212,.1)"><i class="fa-solid fa-chart-bar" style="color:var(--cyan)"></i></div>
+              <div><p class="ch-title">Vitals Analysis</p><p class="ch-sub">Per-vital normal range assessment</p></div>
             </div>
-            <div>
-              <label class="field-label">Systolic BP (mmHg)</label>
-              <input type="number" id="ai-sbp" class="input-field" value="120" min="80" max="200" step="1" aria-label="Systolic Blood Pressure">
-            </div>
-            <div>
-              <label class="field-label">Diastolic BP (mmHg)</label>
-              <input type="number" id="ai-dbp" class="input-field" value="80" min="50" max="130" step="1" aria-label="Diastolic Blood Pressure">
-            </div>
-            <div>
-              <label class="field-label">Heart Rate (bpm)</label>
-              <input type="number" id="ai-hr" class="input-field" value="72" min="45" max="150" step="1" aria-label="Heart Rate">
-            </div>
-            <div>
-              <label class="field-label">Glucose (mg/dL)</label>
-              <input type="number" id="ai-glucose" class="input-field" value="95" min="60" max="300" step="1" aria-label="Blood Glucose Level">
-            </div>
-            <div>
-              <label class="field-label">BMI (kg/m²)</label>
-              <input type="number" id="ai-bmi" class="input-field" value="24" min="15" max="50" step="0.1" aria-label="BMI">
-            </div>
-            <div>
-              <label class="field-label">Cholesterol (mg/dL)</label>
-              <input type="number" id="ai-chol" class="input-field" value="185" min="100" max="350" step="1" aria-label="Cholesterol">
-            </div>
-            <div>
-              <label class="field-label">O₂ Saturation (%)</label>
-              <input type="number" id="ai-o2" class="input-field" value="98" min="85" max="100" step="0.1" aria-label="Oxygen Saturation">
-            </div>
+            <div id="vitals-cards" class="g2 gap-sm"></div>
           </div>
 
-          <button type="button" onclick="runAIPredict()" id="ai-predict-btn" class="btn btn-purple btn-full mt-4">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Assess Disease Risk
-          </button>
+          <!-- ── RECOMMENDATIONS (shown after analysis) ─────────── -->
+          <div id="ai-recommendations" class="card anim" style="display:none;animation-delay:.06s">
+            <div class="ch">
+              <div class="ch-icon" style="background:rgba(16,185,129,.1)"><i class="fa-solid fa-list-check" style="color:var(--em)"></i></div>
+              <div><p class="ch-title">AI Recommendations</p><p class="ch-sub">Personalized action plan based on your vitals &amp; risk score</p></div>
+            </div>
+            <div id="recs-list" class="space-y-2.5"></div>
+          </div>
 
-          <div id="ai-result" class="hidden mt-4"></div>
-        </section>
+        </div>
 
-      </div><!-- end forms column -->
+      </div><!-- end left column -->
 
-      <!-- RESULTS SIDE PANEL -->
-      <div class="w-88 shrink-0 p-6" style="width:360px">
+      <!-- ─── Right: Results panel ─────────────────────────────── -->
+      {% if isCard == True %}
+      {% block content1 %}
+      <div class="shrink-0 p-4 overflow-y-auto" style="width:320px;border-left:1px solid var(--border)">
+        <div class="res-panel sticky top-4" style="border-color:rgba(16,185,129,.2)">
 
-        {% if isCard == True %}
-        {% block content1 %}
-        <div class="result-panel sticky top-20 anim" style="border-color:rgba(16,185,129,.2)">
-          <div class="flex items-center gap-2.5 mb-4 pb-4" style="border-bottom:1px solid var(--border)">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:rgba(16,185,129,.12)">
-              <i class="fa-solid fa-bolt text-sm" style="color:var(--emerald)"></i>
+          <div class="flex items-center gap-2.5 mb-3 pb-3" style="border-bottom:1px solid var(--border)">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(16,185,129,.12)">
+              <i class="fa-solid fa-bolt text-sm" style="color:var(--em)"></i>
             </div>
             <div>
-              <p class="text-xs" style="color:var(--muted)">Transaction Result</p>
+              <p style="font-size:.65rem;color:var(--muted)">Transaction Result</p>
               <p class="hfont font-semibold text-sm text-white">{{ result }}</p>
             </div>
           </div>
 
-          <div class="space-y-2.5">
+          <div class="space-y-2">
 
             {% if isStart == True %}
-            <div class="result-row">
-              <p class="result-label">Appointment Date</p>
-              <p class="result-val font-mono">{{ date }}</p>
+            <div class="res-row">
+              <p class="rl">Appointment Date</p>
+              <p class="rv font-mono">{{ date }}</p>
             </div>
             {% endif %}
 
-            <div class="result-row">
-              <p class="result-label">Transaction Hash</p>
-              <p class="result-val font-mono">{{ tx_hash[:40] }}…</p>
+            <div class="res-row">
+              <p class="rl">Transaction Hash</p>
+              <p class="rv font-mono">{{ tx_hash[:40] }}…</p>
             </div>
 
             {% if event_logs[0]['args']['record_unique_id'] %}
-            <div class="result-row" style="border-color:rgba(59,130,246,.2);background:rgba(59,130,246,.04)">
-              <p class="result-label" style="color:rgba(147,197,253,.7)">Unique Record ID</p>
-              <p class="result-val font-mono" id="record-id-text">{{ event_logs[0]['args']['record_unique_id'] }}</p>
-              <button onclick="copyText(document.getElementById('record-id-text').textContent.trim())" class="btn btn-ghost mt-2 py-1 px-2.5" style="font-size:.7rem;min-width:0;color:var(--blue);border-color:rgba(59,130,246,.2)">
+            <div class="res-row" style="border-color:rgba(59,130,246,.2);background:rgba(59,130,246,.04)">
+              <p class="rl" style="color:rgba(147,197,253,.7)">Unique Record ID</p>
+              <p class="rv font-mono" id="record-id-text">{{ event_logs[0]['args']['record_unique_id'] }}</p>
+              <button onclick="copyText(document.getElementById('record-id-text').textContent.trim())"
+                class="btn b-ghost mt-2" style="font-size:.7rem;padding:.25rem .6rem;color:var(--blue);border-color:rgba(59,130,246,.2)">
                 <i class="fa-solid fa-copy"></i> Copy ID
               </button>
             </div>
-            <div class="result-row text-center" style="padding:.75rem">
-              <p class="result-label mb-2">Show to your doctor</p>
-              <img src={{qr_code}} alt="QR Code for Record" class="mx-auto rounded-lg" style="max-width:130px"/>
+            <div class="res-row text-center" style="padding:.75rem">
+              <p class="rl mb-2">Show to your doctor</p>
+              <img src={{qr_code}} alt="QR Code" class="mx-auto rounded-lg" style="max-width:120px"/>
             </div>
             {% endif %}
 
             {% if event_logs[0]['args']['record_msg'] %}
-            <div class="result-row">
-              <p class="result-label">Record Message</p>
-              <p class="result-val">{{ event_logs[0]['args']['record_msg'] }}</p>
+            <div class="res-row">
+              <p class="rl">Record Message</p>
+              <p class="rv">{{ event_logs[0]['args']['record_msg'] }}</p>
             </div>
-            <div class="result-row">
-              <p class="result-label">Status Code</p>
-              <p class="result-val">{{ event_logs[0]['args']['record_status'] }} <span style="color:var(--muted)">(0=Created 1=Deleted 2=Changed 3=Queried 4=Printed 5=Copied)</span></p>
+            <div class="res-row">
+              <p class="rl">Status Code</p>
+              <p class="rv">{{ event_logs[0]['args']['record_status'] }}
+                <span style="color:var(--muted);font-size:.7rem">(0=Created 1=Deleted 2=Changed 3=Queried 4=Printed 5=Copied)</span>
+              </p>
             </div>
             {% endif %}
 
             {% if event_logs[0]['args']['return_msg'] %}
-            <div class="result-row">
-              <p class="result-label">Event Log</p>
-              <p class="result-val">{{ event_logs[0]['args']['return_msg'] }}</p>
-              <p class="result-val font-mono mt-1" style="font-size:.75rem;color:var(--muted)">{{ event_logs[0]['args']['doctor_address'] }}</p>
-              <p class="result-val mt-1" style="font-size:.75rem;color:var(--muted)">Epoch: {{ event_logs[0]['args']['record_time'] }}</p>
+            <div class="res-row">
+              <p class="rl">Event Log</p>
+              <p class="rv">{{ event_logs[0]['args']['return_msg'] }}</p>
+              <p class="rv font-mono mt-1" style="font-size:.7rem;color:var(--muted)">{{ event_logs[0]['args']['doctor_address'] }}</p>
+              <p class="rv mt-1" style="font-size:.7rem;color:var(--muted)">Epoch: {{ event_logs[0]['args']['record_time'] }}</p>
             </div>
             {% endif %}
 
             {% if record_details %}
-            <div class="result-row" style="border-color:rgba(16,185,129,.2);background:rgba(16,185,129,.03)">
+            <div class="res-row" style="border-color:rgba(16,185,129,.2);background:rgba(16,185,129,.03)">
               <div class="flex items-center justify-between mb-2">
-                <p class="result-label" style="color:rgba(52,211,153,.8)"><i class="fa-solid fa-file-medical mr-1"></i>Medical Record</p>
-                {% if ipfs_cid %}
-                <span class="badge-green" style="font-size:.65rem">IPFS</span>
-                {% else %}
-                <span class="badge-blue" style="font-size:.65rem">On-chain</span>
-                {% endif %}
+                <p class="rl" style="color:rgba(52,211,153,.8)"><i class="fa-solid fa-file-medical mr-1"></i>Medical Record</p>
+                {% if ipfs_cid %}<span class="badge-em" style="font-size:.62rem">IPFS</span>
+                {% else %}<span class="badge-blue" style="font-size:.62rem">On-chain</span>{% endif %}
               </div>
 
               {% if is_binary or (ipfs_cid and record_details|length > 200) %}
-              <div class="flex flex-col items-center py-5 text-center rounded-xl" style="background:rgba(255,255,255,.02);border:1px solid var(--border)">
+              <div class="text-center py-4 rounded-xl" style="background:rgba(255,255,255,.02);border:1px solid var(--border)">
                 {% if record_details and record_details|length < 500 %}
-                <p class="text-xs mb-4 px-3 text-white leading-relaxed">{{ record_details }}</p>
+                <p class="text-xs mb-3 px-2 text-white leading-relaxed">{{ record_details }}</p>
                 {% endif %}
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style="background:rgba(16,185,129,.12)">
-                  <i class="fa-solid fa-file-medical text-xl" style="color:var(--emerald)"></i>
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2" style="background:rgba(16,185,129,.12)">
+                  <i class="fa-solid fa-file-medical" style="color:var(--em)"></i>
                 </div>
-                <p class="text-sm font-semibold text-white mb-1">File Attachment</p>
-                <p class="text-xs mb-4" style="color:var(--muted)">Protected file stored on IPFS</p>
-                <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" class="btn btn-green py-2 px-4" style="font-size:.8rem">
-                  <i class="fa-solid fa-eye"></i> View &amp; Download
+                <p class="text-xs font-semibold text-white mb-1">File Attachment</p>
+                <p class="text-xs mb-3" style="color:var(--muted)">Protected file on IPFS</p>
+                <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" class="btn b-em" style="font-size:.75rem;padding:.4rem .8rem">
+                  <i class="fa-solid fa-eye"></i> View
                 </a>
               </div>
               {% else %}
@@ -466,23 +673,22 @@
             </div>
 
             {% if ipfs_cid %}
-            <div class="result-row" style="border-color:rgba(139,92,246,.2);background:rgba(139,92,246,.03)">
-              <p class="result-label" style="color:rgba(196,181,253,.7)"><i class="fa-solid fa-cubes mr-1"></i>IPFS Storage</p>
-              <p class="result-val font-mono" id="patient-ipfs-cid">{{ ipfs_cid }}</p>
+            <div class="res-row" style="border-color:rgba(139,92,246,.2);background:rgba(139,92,246,.03)">
+              <p class="rl" style="color:rgba(196,181,253,.7)"><i class="fa-solid fa-cubes mr-1"></i>IPFS Storage</p>
+              <p class="rv font-mono" id="pt-ipfs-cid">{{ ipfs_cid }}</p>
               <div class="flex items-center gap-2 mt-2">
-                <button onclick="copyText(document.getElementById('patient-ipfs-cid').textContent.trim())" class="btn btn-ghost py-1 px-2.5" style="font-size:.7rem;min-width:0;color:var(--purple);border-color:rgba(139,92,246,.25)">
+                <button onclick="copyText(document.getElementById('pt-ipfs-cid').textContent.trim())"
+                  class="btn b-ghost" style="font-size:.7rem;padding:.25rem .6rem;color:var(--purple);border-color:rgba(139,92,246,.25)">
                   <i class="fa-solid fa-copy"></i> Copy CID
                 </button>
-                {% if ipfs_source == 'local' %}
-                <span class="badge-green" style="font-size:.65rem"><i class="fa-solid fa-server"></i> Local</span>
-                {% elif ipfs_source == 'gateway' %}
-                <span class="badge-blue" style="font-size:.65rem"><i class="fa-solid fa-globe"></i> Gateway</span>
-                {% else %}
-                <span style="font-size:.65rem;padding:.2rem .5rem;border-radius:100px;background:rgba(239,68,68,.1);color:var(--red)">Unavailable</span>
+                {% if ipfs_source == 'local' %}<span class="badge-em" style="font-size:.62rem"><i class="fa-solid fa-server"></i> Local</span>
+                {% elif ipfs_source == 'gateway' %}<span class="badge-blue" style="font-size:.62rem"><i class="fa-solid fa-globe"></i> Gateway</span>
+                {% else %}<span style="font-size:.62rem;padding:.2rem .5rem;border-radius:100px;background:rgba(239,68,68,.1);color:var(--red)">Unavailable</span>
                 {% endif %}
               </div>
               {% if ipfs_gateway_url %}
-              <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" rel="noopener" class="flex items-center gap-1.5 text-xs mt-2 hover:underline" style="color:var(--purple)">
+              <a href="{{ ipfs_gateway_url }}{{ ipfs_cid }}" target="_blank" rel="noopener"
+                class="flex items-center gap-1.5 text-xs mt-2 hover:underline" style="color:var(--purple)">
                 <i class="fa-solid fa-arrow-up-right-from-square"></i> View on IPFS Gateway
               </a>
               {% endif %}
@@ -492,19 +698,109 @@
 
           </div>
         </div>
-        {% endblock %}
-        {% endif %}
+      </div>
+      {% endblock %}
+      {% endif %}
 
-      </div><!-- end results panel -->
-    </div>
-  </div>
+    </div><!-- end content+results -->
+  </div><!-- end main -->
 
   <!-- Copy toast -->
-  <div id="copy-toast" class="fixed bottom-6 right-6 text-sm font-semibold px-4 py-2.5 rounded-xl opacity-0 transition-opacity duration-300 pointer-events-none" style="background:var(--emerald);color:#fff">
+  <div id="copy-toast" class="fixed bottom-5 right-5 text-sm font-semibold px-3.5 py-2.5 rounded-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50" style="background:var(--em);color:#fff">
     <i class="fa-solid fa-check mr-1.5"></i> Copied!
   </div>
 
+  <!-- ═══ ERROR MODAL ══════════════════════════════════════════════ -->
+  {% if flash_error %}
+  <div id="err-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,.65);backdrop-filter:blur(4px)">
+    <div class="w-full max-w-md rounded-2xl overflow-hidden" style="background:#0F1E35;border:1px solid rgba(239,68,68,.3);box-shadow:0 25px 60px rgba(0,0,0,.6)">
+
+      <!-- Red header bar -->
+      <div class="flex items-center justify-between px-5 py-4" style="background:rgba(239,68,68,.1);border-bottom:1px solid rgba(239,68,68,.2)">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3)">
+            <i class="fa-solid fa-triangle-exclamation" style="color:#F87171"></i>
+          </div>
+          <div>
+            <p class="hfont font-bold text-white text-sm leading-snug">{{ flash_error.title }}</p>
+            <p style="font-size:.68rem;color:rgba(248,113,113,.8)">Blockchain Transaction Error</p>
+          </div>
+        </div>
+        <button onclick="document.getElementById('err-overlay').remove()" class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors" style="background:rgba(255,255,255,.05);color:#94A3B8;border:1px solid var(--border)" aria-label="Close">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-5 space-y-4">
+
+        <!-- Why -->
+        <div class="rounded-xl p-4" style="background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.15)">
+          <p class="flex items-center gap-2 text-xs font-semibold mb-2" style="color:#F87171">
+            <i class="fa-solid fa-circle-question"></i> Why did this happen?
+          </p>
+          <p class="text-sm leading-relaxed whitespace-pre-line" style="color:#CBD5E1">{{ flash_error.why }}</p>
+        </div>
+
+        <!-- Fix -->
+        <div class="rounded-xl p-4" style="background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.15)">
+          <p class="flex items-center gap-2 text-xs font-semibold mb-2" style="color:#6EE7B7">
+            <i class="fa-solid fa-screwdriver-wrench"></i> How to fix it
+          </p>
+          <p class="text-sm leading-relaxed whitespace-pre-line" style="color:#CBD5E1">{{ flash_error.fix }}</p>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="px-5 pb-5">
+        <button onclick="document.getElementById('err-overlay').remove()" class="btn b-ghost btn-w" style="color:#E2E8F0">
+          <i class="fa-solid fa-circle-check"></i> Got it, I'll fix this
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Persistent error toast (bottom-right) — stays until dismissed -->
+  <div id="err-toast" class="fixed bottom-5 left-5 z-40 flex items-start gap-3 p-3.5 rounded-xl max-w-xs shadow-xl" style="background:#0F1E35;border:1px solid rgba(239,68,68,.3)">
+    <i class="fa-solid fa-triangle-exclamation mt-0.5 shrink-0" style="color:#F87171;font-size:.9rem"></i>
+    <div class="min-w-0">
+      <p class="text-xs font-semibold text-white leading-snug">{{ flash_error.title }}</p>
+      <p class="text-xs mt-0.5 leading-snug" style="color:#94A3B8">Click the modal for details &amp; fix.</p>
+    </div>
+    <button onclick="document.getElementById('err-toast').remove()" class="shrink-0 w-5 h-5 flex items-center justify-center rounded" style="color:#475569" aria-label="Dismiss">
+      <i class="fa-solid fa-xmark text-xs"></i>
+    </button>
+  </div>
+  {% endif %}
+
   <script>
+    // ── Sidebar ────────────────────────────────────────────────────
+    let sidebarOpen = true;
+    function toggleSidebar() {
+      sidebarOpen = !sidebarOpen;
+      document.getElementById('sidebar').classList.toggle('collapsed', !sidebarOpen);
+      document.getElementById('toggle-icon').style.transform = sidebarOpen ? '' : 'rotate(180deg)';
+      localStorage.setItem('ptSidebar', sidebarOpen ? '1' : '0');
+    }
+
+    // ── Tabs ───────────────────────────────────────────────────────
+    function showTab(name) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      ['pane-'+name, 'tb-'+name, 'nav-'+name].forEach(id => {
+        const el = document.getElementById(id); if (el) el.classList.add('active');
+      });
+      localStorage.setItem('ptTab', name);
+    }
+    function setActive(el) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    // ── Copy ───────────────────────────────────────────────────────
     function copyText(text) {
       navigator.clipboard.writeText(text).then(() => {
         const el = document.getElementById('copy-toast');
@@ -512,45 +808,100 @@
       });
     }
 
-    document.querySelectorAll('form').forEach(form => {
-      form.addEventListener('submit', function(e) {
-        const btn = this.querySelector('button[type="submit"]:not([data-no-spinner])');
-        if (btn) {
-          setTimeout(() => {
-            btn.style.opacity = '0.6';
-            btn.style.cursor  = 'not-allowed';
-            btn.innerHTML     = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing…';
-          }, 10);
-        }
+    // ── Form spinners ──────────────────────────────────────────────
+    document.querySelectorAll('form').forEach(f => {
+      f.addEventListener('submit', function() {
+        const btn = this.querySelector('button[type="submit"]');
+        if (btn) setTimeout(() => { btn.disabled=true; btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Processing…'; }, 10);
       });
     });
 
-    // ── AI Risk Assessment ─────────────────────────────────────────
-    async function checkAIModelReady() {
-      const banner = document.getElementById('ai-model-check');
-      if (!banner) return;
+    // ── AI Model status ────────────────────────────────────────────
+    async function checkAIModel() {
+      const banners = [document.getElementById('ai-model-banner'), document.getElementById('ov-ai-banner')];
       try {
-        const res  = await fetch('/fl/status');
-        const data = await res.json();
+        const data = await (await fetch('/fl/status')).json();
         if (data.global_model_ready) {
-          banner.style.cssText = 'background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);color:var(--emerald);padding:.75rem;border-radius:10px;font-size:.75rem;display:flex;align-items:center;gap:.625rem';
-          banner.innerHTML = `<i class="fa-solid fa-circle-check"></i> Global AI model ready — Round ${data.round}, ${(data.hospitals_trained||[]).length} hospitals contributed`;
+          const html = `<i class="fa-solid fa-circle-check shrink-0 mt-0.5"></i> FL Model ready — Round ${data.round}, ${(data.hospitals_trained||[]).length} hospital(s) trained`;
+          const s = 'background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);color:#6EE7B7;padding:.7rem;border-radius:10px;font-size:.75rem;display:flex;align-items:center;gap:.5rem;margin-bottom:12px;';
+          banners.forEach(b => { if(b){b.style.cssText=s; b.innerHTML=html;} });
+          const ov = document.getElementById('ov-model-status');
+          if (ov) { ov.textContent='Ready'; ov.style.color='var(--em)'; ov.style.fontSize='.9rem'; }
         } else {
-          banner.style.cssText = 'background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);color:var(--amber);padding:.75rem;border-radius:10px;font-size:.75rem;display:flex;align-items:center;gap:.625rem';
-          banner.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Model training in progress (${data.progress_pct || 0}% complete). Ask your doctor to complete hospital training.`;
+          const html = `<i class="fa-solid fa-triangle-exclamation shrink-0 mt-0.5"></i> Model training in progress (${data.progress_pct||0}%). Ask doctor to complete training.`;
+          const s = 'background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);color:#FCD34D;padding:.7rem;border-radius:10px;font-size:.75rem;display:flex;align-items:center;gap:.5rem;margin-bottom:12px;';
+          banners.forEach(b => { if(b){b.style.cssText=s; b.innerHTML=html;} });
+          const ov = document.getElementById('ov-model-status');
+          if (ov) { ov.textContent='Training'; ov.style.color='var(--amber)'; ov.style.fontSize='.9rem'; }
         }
       } catch(e) {
-        banner.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Could not check model status.';
+        banners.forEach(b => { if(b) b.innerHTML='<i class="fa-solid fa-triangle-exclamation mr-1"></i> Could not check model.'; });
       }
     }
 
-    async function runAIPredict() {
-      const btn      = document.getElementById('ai-predict-btn');
-      const resultEl = document.getElementById('ai-result');
-      btn.disabled   = true;
-      btn.innerHTML  = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Analyzing vitals…';
+    // ── Symptom checker ────────────────────────────────────────────
+    const _selectedSymptoms = new Set();
 
-      const payload = {
+    function toggleSymptom(btn, sym) {
+      if (_selectedSymptoms.has(sym)) {
+        _selectedSymptoms.delete(sym);
+        btn.classList.remove('selected');
+      } else {
+        _selectedSymptoms.add(sym);
+        btn.classList.add('selected');
+      }
+      document.getElementById('symptom-input').value = [..._selectedSymptoms].join(', ');
+    }
+
+    async function runSymptomCheck() {
+      const btn   = document.getElementById('sym-btn');
+      const el    = document.getElementById('sym-result');
+      const input = document.getElementById('symptom-input').value.trim();
+      if (!input) { el.style.display='block'; el.innerHTML='<div class="alert a-amb"><i class="fa-solid fa-triangle-exclamation shrink-0 mt-0.5"></i> Please select or enter at least one symptom.</div>'; return; }
+      btn.disabled=true; btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1"></i>';
+      try {
+        const data = await (await fetch('/ai/symptoms', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symptoms:input})})).json();
+        el.style.display = 'block';
+        if (!data.matched) {
+          el.innerHTML = `<div class="alert a-amb"><i class="fa-solid fa-circle-info shrink-0 mt-0.5"></i> ${data.message}</div>`;
+        } else {
+          const sevColor = {'critical':'#EF4444','high':'#EF4444','moderate':'#F59E0B','mild':'#10B981'};
+          el.innerHTML = `
+            <p style="font-size:.72rem;color:#64748B;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">Top matches — not a medical diagnosis</p>
+            ${data.results.map((r,i) => `
+              <div style="margin-bottom:10px;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03)">
+                  <i class="fa-solid ${r.icon}" style="color:${r.color};font-size:.9rem;flex-shrink:0"></i>
+                  <div style="flex:1;min-width:0">
+                    <span class="hfont" style="font-size:.8rem;font-weight:700;color:#F1F5F9">${r.conditions[0]}</span>
+                    ${r.conditions.slice(1).map(c=>`<span style="font-size:.7rem;color:#64748B"> / ${c}</span>`).join('')}
+                  </div>
+                  <span style="font-size:.65rem;padding:.2rem .55rem;border-radius:100px;background:rgba(255,255,255,.07);color:${sevColor[r.severity]||'#94A3B8'};border:1px solid ${sevColor[r.severity]||'#333'}33;white-space:nowrap">${r.severity_label}</span>
+                </div>
+                <div style="padding:10px 14px;font-size:.78rem">
+                  <p style="color:#94A3B8;margin-bottom:5px"><strong style="color:#CBD5E1">Matched:</strong> ${r.matched_keywords.join(', ')}</p>
+                  <p style="color:#CBD5E1;line-height:1.5"><i class="fa-solid fa-circle-chevron-right mr-1.5" style="color:${r.color}"></i>${r.action}</p>
+                  <p style="font-size:.68rem;color:#475569;margin-top:5px">ICD-10: ${r.icd.join(', ')}</p>
+                </div>
+              </div>`).join('')}
+            <p style="font-size:.68rem;color:#475569;text-align:center;margin-top:6px"><i class="fa-solid fa-triangle-exclamation mr-1"></i>This is an AI indicator only — always consult a licensed physician.</p>`;
+        }
+      } catch(e) {
+        el.style.display='block'; el.innerHTML=`<div class="alert a-red"><i class="fa-solid fa-circle-xmark shrink-0 mt-0.5"></i> Analysis failed: ${e.message}</div>`;
+      }
+      btn.disabled=false; btn.innerHTML='<i class="fa-solid fa-magnifying-glass-chart"></i> Analyze';
+    }
+
+    // ── Full AI analysis (FL predict + vitals breakdown + recs) ───
+    async function runFullAnalysis() {
+      const btn    = document.getElementById('ai-predict-btn');
+      const flEl   = document.getElementById('ai-fl-result');
+      const vbEl   = document.getElementById('ai-vitals-breakdown');
+      const recEl  = document.getElementById('ai-recommendations');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Running AI Analysis…';
+
+      const vitals = {
         age:               parseFloat(document.getElementById('ai-age').value),
         systolic_bp:       parseFloat(document.getElementById('ai-sbp').value),
         diastolic_bp:      parseFloat(document.getElementById('ai-dbp').value),
@@ -561,58 +912,92 @@
         oxygen_saturation: parseFloat(document.getElementById('ai-o2').value),
       };
 
+      // Run FL predict + vitals analysis in parallel
+      let flData = null;
       try {
-        const res = await fetch('/fl/predict', {
-          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload),
-        });
+        const [flResp, vaResp] = await Promise.all([
+          fetch('/fl/predict', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(vitals)}),
+          fetch('/ai/vitals-analysis', {method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({...vitals, prediction:0, probability:0})}),
+        ]);
 
-        if (res.status === 404) {
-          resultEl.classList.remove('hidden');
-          resultEl.innerHTML = '<div class="p-3 rounded-xl text-xs" style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);color:var(--amber)"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Global model not ready. Ask your doctor to complete training first.</div>';
-          btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Assess Disease Risk';
-          return;
+        // ── FL result ──────────────────────────────────────────────
+        flEl.style.display = 'block';
+        if (flResp.status === 404) {
+          flEl.innerHTML = `<div class="alert a-amb" style="margin-top:10px"><i class="fa-solid fa-triangle-exclamation shrink-0 mt-0.5"></i> FL model not ready yet — ask your doctor to complete hospital training. Vitals analysis will still run.</div>`;
+        } else {
+          flData = await flResp.json();
+          const hi  = flData.prediction === 1;
+          const col = hi ? '#EF4444' : '#10B981';
+          const bg  = hi ? 'rgba(239,68,68,.07)' : 'rgba(16,185,129,.07)';
+          const bd  = hi ? 'rgba(239,68,68,.2)'  : 'rgba(16,185,129,.2)';
+          flEl.innerHTML = `
+            <div style="border:1px solid ${bd};border-radius:12px;overflow:hidden;margin-top:10px">
+              <div style="background:${bg};padding:1.25rem;display:flex;align-items:center;gap:14px">
+                <i class="fa-solid ${hi?'fa-heart-crack':'fa-heart'} fa-2x" style="color:${col};flex-shrink:0"></i>
+                <div style="flex:1">
+                  <div class="hfont" style="font-size:1.25rem;font-weight:700;color:${col}">${flData.risk_label}</div>
+                  <div style="font-size:.8rem;color:#94A3B8;margin-top:2px">Probability: <strong style="color:#E2E8F0">${flData.probability}%</strong> &nbsp;·&nbsp; ${flData.model_version}</div>
+                  <div style="height:6px;border-radius:3px;background:rgba(255,255,255,.07);margin-top:8px;overflow:hidden">
+                    <div style="width:${flData.probability}%;height:100%;border-radius:3px;background:${col};transition:width .6s"></div>
+                  </div>
+                </div>
+              </div>
+            </div>`;
         }
 
-        const data   = await res.json();
-        const isHigh = data.prediction === 1;
-        const color  = isHigh ? 'var(--red)'     : 'var(--emerald)';
-        const bgClr  = isHigh ? 'rgba(239,68,68,.07)' : 'rgba(16,185,129,.07)';
-        const bdClr  = isHigh ? 'rgba(239,68,68,.2)'  : 'rgba(16,185,129,.2)';
-        const icon   = isHigh ? 'fa-heart-crack' : 'fa-heart';
+        // ── Vitals + Recs ──────────────────────────────────────────
+        const vaPayload = {...vitals,
+          prediction: flData ? flData.prediction : 0,
+          probability: flData ? flData.probability : 0,
+        };
+        const vaData = await (await fetch('/ai/vitals-analysis', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(vaPayload)})).json();
 
-        resultEl.classList.remove('hidden');
-        resultEl.innerHTML = `
-          <div style="border:1px solid ${bdClr};border-radius:12px;overflow:hidden">
-            <div style="background:${bgClr};padding:1.25rem;text-align:center">
-              <i class="fa-solid ${icon} fa-2x mb-2" style="color:${color};display:block"></i>
-              <div class="hfont" style="font-size:1.375rem;font-weight:700;color:${color};margin-bottom:.25rem">${data.risk_label}</div>
-              <div style="font-size:.8rem;color:#94A3B8">Risk probability: <strong style="color:#E2E8F0">${data.probability}%</strong></div>
-              <div style="max-width:200px;margin:.75rem auto 0;height:6px;border-radius:3px;background:rgba(255,255,255,.07)">
-                <div style="width:${data.probability}%;height:100%;border-radius:3px;background:${color};transition:width .6s"></div>
-              </div>
-              <div style="font-size:.7rem;color:#475569;margin-top:.5rem">${data.model_version}</div>
+        // Vitals breakdown
+        vbEl.style.display = 'block';
+        const statusIcon = {normal:'fa-circle-check', warning:'fa-triangle-exclamation', critical:'fa-circle-xmark'};
+        document.getElementById('vitals-cards').innerHTML = vaData.vitals.map(v => `
+          <div style="background:rgba(255,255,255,.025);border:1px solid ${v.color}33;border-radius:10px;padding:10px 12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:.72rem;color:#94A3B8">${v.label}</span>
+              <span style="font-size:.65rem;padding:.15rem .45rem;border-radius:100px;background:${v.color}1A;color:${v.color};border:1px solid ${v.color}33">
+                <i class="fa-solid ${statusIcon[v.status]} mr-0.5"></i>${v.badge}
+              </span>
             </div>
-            <div style="padding:1rem;background:rgba(255,255,255,.015)">
-              <p style="font-size:.7rem;color:#64748B;margin-bottom:.625rem;text-transform:uppercase;letter-spacing:.05em">Vitals used</p>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.25rem .75rem">
-                ${Object.entries(data.input_features).map(([k,v]) =>
-                  `<div style="display:flex;justify-content:space-between;font-size:.75rem">
-                     <span style="color:#64748B">${k.replace(/_/g,' ')}</span>
-                     <span style="color:#E2E8F0;font-family:monospace">${v}</span>
-                   </div>`
-                ).join('')}
-              </div>
+            <div style="font-size:1rem;font-weight:700;color:${v.color};font-family:'Space Grotesk',sans-serif">${v.value} <span style="font-size:.7rem;font-weight:400;color:#64748B">${v.unit}</span></div>
+            <div class="vital-bar-bg"><div class="vital-bar-fill" style="width:${v.pct}%;background:${v.color}"></div></div>
+            <div style="font-size:.65rem;color:#475569;margin-top:3px">Normal: ${v.normal_range}</div>
+          </div>`).join('');
+
+        // Recommendations
+        recEl.style.display = 'block';
+        document.getElementById('recs-list').innerHTML = vaData.recommendations.map(r => `
+          <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid ${r.color}22">
+            <div style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:${r.color}18;border:1px solid ${r.color}33">
+              <i class="fa-solid ${r.icon}" style="color:${r.color};font-size:.8rem"></i>
             </div>
-          </div>`;
+            <div>
+              <p style="font-size:.78rem;font-weight:600;color:#F1F5F9;margin-bottom:2px">${r.title}</p>
+              <p style="font-size:.75rem;color:#94A3B8;line-height:1.5">${r.text}</p>
+            </div>
+          </div>`).join('');
+
       } catch(e) {
-        resultEl.classList.remove('hidden');
-        resultEl.innerHTML = `<div class="p-3 rounded-xl text-xs" style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);color:var(--red)"><i class="fa-solid fa-circle-xmark mr-1"></i>Prediction failed: ${e.message}</div>`;
+        flEl.style.display='block';
+        flEl.innerHTML=`<div class="alert a-red" style="margin-top:10px"><i class="fa-solid fa-circle-xmark shrink-0 mt-0.5"></i> Analysis failed: ${e.message}</div>`;
       }
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Assess Disease Risk';
+      btn.disabled=false; btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Run Full AI Analysis';
     }
 
-    window.addEventListener('DOMContentLoaded', checkAIModelReady);
+    // ── Init ────────────────────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', () => {
+      const hasResult = document.body.dataset.hasResult === 'true';
+      const savedTab  = localStorage.getItem('ptTab') || 'overview';
+      const sbState   = localStorage.getItem('ptSidebar');
+      if (sbState === '0') { sidebarOpen = true; toggleSidebar(); }
+      showTab(hasResult ? savedTab : 'overview');
+      checkAIModel();
+    });
   </script>
 </body>
 </html>
